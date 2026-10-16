@@ -1,0 +1,12 @@
+{
+  "name": "claude-multi",
+  "version": "1.0.0",
+  "description": "Four Claude accounts side by side with saved logins and usage display",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^33.2.0"
+  }
+}

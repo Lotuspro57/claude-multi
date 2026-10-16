@@ -1,0 +1,95 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #1f1e1d; color: #e8e6e3; font: 12px system-ui, sans-serif; overflow: hidden; }
+  #strip { display: flex; height: 100%; }
+  .cell { flex: 1; min-width: 0; padding: 8px 10px; border-right: 1px solid #3a3836; display: flex; flex-direction: column; gap: 5px; }
+  .cell:last-child { border-right: none; }
+  .cell.hidden { display: none; }
+  .top { display: flex; align-items: center; gap: 6px; }
+  .name { flex: 1; min-width: 0; background: transparent; border: 1px solid transparent; color: #fff; font-weight: 600; font-size: 13px; padding: 2px 4px; border-radius: 4px; }
+  .name:hover, .name:focus { border-color: #55514d; outline: none; background: #2b2927; }
+  button { background: #2f2d2b; color: #ccc; border: 1px solid #4a4744; border-radius: 4px; padding: 2px 7px; cursor: pointer; font-size: 11px; }
+  button:hover { background: #3d3a37; color: #fff; }
+  .bars { display: flex; flex-direction: column; gap: 4px; overflow: hidden; }
+  .row { display: flex; align-items: center; gap: 6px; }
+  .lbl { width: 38%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #b5b1ac; }
+  .track { flex: 1; height: 8px; background: #3a3836; border-radius: 4px; overflow: hidden; }
+  .fill { height: 100%; background: #d97757; }
+  .fill.warn { background: #e0a030; }
+  .fill.hot { background: #d64545; }
+  .pct { width: 38px; text-align: right; font-variant-numeric: tabular-nums; }
+  .msg { color: #9a958f; }
+  .err { color: #e08a7a; }
+  .ts { color: #6f6b66; font-size: 10px; }
+</style>
+</head>
+<body>
+<div id="strip"></div>
+<script>
+  const strip = document.getElementById('strip');
+  const cells = [];
+  let zoomed = -1;
+
+  function build(names) {
+    names.forEach((n, i) => {
+      const c = document.createElement('div');
+      c.className = 'cell';
+      c.innerHTML = `
+        <div class="top">
+          <input class="name" value="" spellcheck="false">
+          <button data-a="usage" title="Refresh usage">&#8635; usage</button>
+          <button data-a="reload" title="Reload Claude page">home</button>
+          <button data-a="zoom" title="Zoom this pane / back to all">zoom</button>
+        </div>
+        <div class="bars"><div class="msg">Log in on the page below. Usage appears after login.</div></div>
+        <div class="ts"></div>`;
+      const input = c.querySelector('.name');
+      input.value = n;
+      input.addEventListener('change', () => window.api.rename(i, input.value));
+      c.querySelector('[data-a=usage]').onclick = () => window.api.refreshUsage(i);
+      c.querySelector('[data-a=reload]').onclick = () => window.api.reload(i);
+      c.querySelector('[data-a=zoom]').onclick = () => window.api.zoom(i);
+      strip.appendChild(c);
+      cells.push(c);
+    });
+  }
+
+  function showUsage(d) {
+    const c = cells[d.id];
+    const bars = c.querySelector('.bars');
+    const ts = c.querySelector('.ts');
+    if (d.loading) { ts.textContent = 'Updating usage...'; return; }
+    ts.textContent = 'Updated ' + new Date(d.ts).toLocaleTimeString();
+    bars.innerHTML = '';
+    if (d.error) {
+      const m = document.createElement('div');
+      m.className = d.error === 'Not logged in' ? 'msg' : 'err';
+      m.textContent = d.error === 'Not logged in' ? 'Not logged in yet. Log in below, then press usage.' : d.error;
+      bars.appendChild(m);
+      return;
+    }
+    d.items.slice(0, 3).forEach((it) => {
+      const r = document.createElement('div');
+      r.className = 'row';
+      const cls = it.pct >= 90 ? 'hot' : it.pct >= 70 ? 'warn' : '';
+      r.innerHTML = `<span class="lbl"></span><div class="track"><div class="fill ${cls}" style="width:${it.pct}%"></div></div><span class="pct">${Math.round(it.pct)}%</span>`;
+      r.querySelector('.lbl').textContent = it.label;
+      r.title = it.text;
+      bars.appendChild(r);
+    });
+  }
+
+  window.api.onInit((d) => build(d.names));
+  window.api.onUsage(showUsage);
+  window.api.onZoomed((z) => {
+    zoomed = z;
+    cells.forEach((c, i) => c.classList.toggle('hidden', z >= 0 && i !== z));
+  });
+</script>
+</body>
+</html>
