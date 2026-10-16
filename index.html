@@ -72,6 +72,9 @@
   .card label { font-size: 11px; color: #9aa0ad; }
   .card input { width: 100%; padding: 8px 10px; background: #1b1d24; border: 1px solid #3a3f4b; border-radius: 6px; color: #fff; font-size: 13px; }
   .card input:focus { outline: none; border-color: #5a74b0; }
+  .card label.chk { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #e8e6e3; cursor: pointer; margin-top: 4px; }
+  .card label.chk input { width: auto; }
+  .hint { font-size: 11px; color: #8f95a3; line-height: 1.4; }
   .actions { display: flex; gap: 8px; margin-top: 6px; }
   .actions .sp { flex: 1; }
   .btn.pri { background: #3b6fd4; border-color: #5a8cf0; color: #fff; }
@@ -103,6 +106,8 @@
     <input id="mName" placeholder="e.g. Perplexity" spellcheck="false">
     <label>Web address</label>
     <input id="mUrl" placeholder="e.g. https://www.perplexity.ai/" spellcheck="false">
+    <label class="chk"><input type="checkbox" id="mShared"> Share login with other apps</label>
+    <div class="hint">On: sign in once (for example with Google) and every other app with this on can reuse it. Off: this app keeps its own separate login. Keep it off for each Claude account so they stay different accounts.</div>
     <div class="actions">
       <button class="btn del" id="mDel" style="display:none">Remove</button>
       <span class="sp"></span>
@@ -215,6 +220,7 @@
     $('mTitle').textContent = s ? 'Edit ' + s.name : 'Add service';
     $('mName').value = s ? s.name : '';
     $('mUrl').value = s ? s.url : '';
+    $('mShared').checked = s ? s.partition === 'persist:shared' : true;
     $('mDel').style.display = s ? '' : 'none';
     $('modal').classList.add('show');
     $('mName').focus();
@@ -223,7 +229,7 @@
 
   $('mCancel').onclick = closeModal;
   $('mSave').onclick = () => {
-    window.api.saveService({ id: editingId, name: $('mName').value, url: $('mUrl').value });
+    window.api.saveService({ id: editingId, name: $('mName').value, url: $('mUrl').value, shared: $('mShared').checked });
     closeModal();
   };
   $('mDel').onclick = () => { if (editingId) window.api.deleteService(editingId); closeModal(); };

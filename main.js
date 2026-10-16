@@ -5,6 +5,7 @@ const fs = require('fs');
 const TAB_H = 46;
 const USAGE_URL = 'https://claude.ai/settings/usage';
 const REFRESH_MS = 5 * 60 * 1000;
+const SHARED = 'persist:shared';
 
 // Look like normal Chrome so Google and other sign-ins accept the embedded pages.
 const UA = app.userAgentFallback
@@ -41,7 +42,12 @@ function loadServices() {
     const data = JSON.parse(fs.readFileSync(servicesFile, 'utf8'));
     if (Array.isArray(data) && data.length) { services = data; return; }
   } catch (e) {}
-  services = DEFAULTS.map((s) => ({ ...s }));
+  // Everything except the four Claude accounts shares one saved login by default.
+  services = DEFAULTS.map((s) => ({ ...s, partition: s.kind === 'claude' ? s.partition : SHARED }));
+}
+function unsharedPartition(id) {
+  const d = DEFAULTS.find((x) => x.id === id);
+  return d ? d.partition : 'persist:svc-' + id;
 }
 function saveServices() {
   try { fs.writeFileSync(servicesFile, JSON.stringify(services, null, 2)); } catch (e) {}
@@ -87,7 +93,8 @@ function layout() {
 }
 
 function createView(s) {
-  const v = new WebContentsView({ webPreferences: { partition: s.partition } });
+  const viewPrefs = { partition: s.partition, preload: path.join(__dirname, 'webauthn-off.js') };
+  const v = new WebContentsView({ webPreferences: viewPrefs });
   v.webContents.setUserAgent(UA);
   const myHost = hostOf(s.url);
   v.webContents.setWindowOpenHandler(({ url }) => {
@@ -96,7 +103,7 @@ function createView(s) {
     if (authHosts.test(h)) {
       return {
         action: 'allow',
-        overrideBrowserWindowOptions: { width: 520, height: 700, autoHideMenuBar: true }
+        overrideBrowserWindowOptions: { width: 520, height: 700, autoHideMenuBar: true, webPreferences: viewPrefs }
       };
     }
     if (h && myHost && (h === myHost || h.endsWith('.' + myHost) || myHost.endsWith('.' + h))) {
@@ -236,16 +243,24 @@ ipcMain.on('reload-active', () => {
   if (active && views.get(active)) views.get(active).webContents.reload();
 });
 ipcMain.on('refresh-usage', (e, id) => refreshUsage(id));
-ipcMain.on('save-service', (e, { id, name, url }) => {
+ipcMain.on('save-service', (e, { id, name, url, shared }) => {
   name = String(name || '').trim();
   url = normalizeUrl(url);
   if (!name || !url) return;
   if (id) {
     const s = services.find((x) => x.id === id);
-    if (s) { s.name = name; s.url = url; }
+    if (s) {
+      s.name = name;
+      s.url = url;
+      const wanted = shared ? SHARED : unsharedPartition(id);
+      if (s.partition !== wanted) {
+        closeService(id); // reopen it to use the new login storage
+        s.partition = wanted;
+      }
+    }
   } else {
     const nid = 'c' + Date.now();
-    services.push({ id: nid, name, url, partition: 'persist:svc-' + nid });
+    services.push({ id: nid, name, url, partition: shared ? SHARED : 'persist:svc-' + nid });
   }
   saveServices();
   pushState();
