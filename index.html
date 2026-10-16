@@ -5,90 +5,236 @@
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; background: #1f1e1d; color: #e8e6e3; font: 12px system-ui, sans-serif; overflow: hidden; }
-  #strip { display: flex; height: 100%; }
-  .cell { flex: 1; min-width: 0; padding: 8px 10px; border-right: 1px solid #3a3836; display: flex; flex-direction: column; gap: 5px; }
-  .cell:last-child { border-right: none; }
-  .cell.hidden { display: none; }
-  .top { display: flex; align-items: center; gap: 6px; }
-  .name { flex: 1; min-width: 0; background: transparent; border: 1px solid transparent; color: #fff; font-weight: 600; font-size: 13px; padding: 2px 4px; border-radius: 4px; }
-  .name:hover, .name:focus { border-color: #55514d; outline: none; background: #2b2927; }
-  button { background: #2f2d2b; color: #ccc; border: 1px solid #4a4744; border-radius: 4px; padding: 2px 7px; cursor: pointer; font-size: 11px; }
-  button:hover { background: #3d3a37; color: #fff; }
-  .bars { display: flex; flex-direction: column; gap: 4px; overflow: hidden; }
-  .row { display: flex; align-items: center; gap: 6px; }
-  .lbl { width: 38%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #b5b1ac; }
-  .track { flex: 1; height: 8px; background: #3a3836; border-radius: 4px; overflow: hidden; }
-  .fill { height: 100%; background: #d97757; }
-  .fill.warn { background: #e0a030; }
-  .fill.hot { background: #d64545; }
-  .pct { width: 38px; text-align: right; font-variant-numeric: tabular-nums; }
-  .msg { color: #9a958f; }
-  .err { color: #e08a7a; }
-  .ts { color: #6f6b66; font-size: 10px; }
+  html, body { margin: 0; height: 100%; overflow: hidden; font: 13px system-ui, "Segoe UI", sans-serif; color: #e8e6e3;
+    background: radial-gradient(1200px 700px at 50% 110%, #1d3557 0%, #14161c 60%); }
+  #bar { height: 46px; display: flex; align-items: center; gap: 6px; padding: 0 8px; background: #1b1d24; border-bottom: 1px solid #2c303a; }
+  .btn { background: #262a33; color: #d7d4d0; border: 1px solid #3a3f4b; border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: 12px; }
+  .btn:hover { background: #323744; color: #fff; }
+  .btn.on { background: #3b4a6b; border-color: #5a74b0; color: #fff; }
+  #chips { display: flex; gap: 6px; flex: 1; min-width: 0; overflow: hidden; }
+  .chip { display: flex; align-items: center; gap: 6px; padding: 4px 6px 4px 8px; max-width: 170px; background: #232733; border: 1px solid #343947; border-radius: 6px; cursor: pointer; }
+  .chip:hover { background: #2d3342; }
+  .chip.on { background: #3b4a6b; border-color: #5a74b0; }
+  .chip img { width: 16px; height: 16px; border-radius: 3px; }
+  .chip span.t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chip .x { width: 18px; height: 18px; line-height: 16px; text-align: center; border-radius: 4px; color: #9a9ea8; }
+  .chip .x:hover { background: #55313a; color: #fff; }
+
+  #home { height: calc(100% - 46px); overflow: auto; padding: 36px 24px 40px; }
+  .hero { position: relative; max-width: 1100px; height: 170px; margin: 0 auto 30px; border-radius: 18px; overflow: hidden;
+    border: 1px solid #343947; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+    background:
+      radial-gradient(420px 220px at 12% 20%, rgba(217, 119, 87, 0.35), transparent 70%),
+      radial-gradient(480px 240px at 88% 85%, rgba(90, 116, 176, 0.45), transparent 70%),
+      linear-gradient(135deg, #1b2236 0%, #141824 55%, #1a1f33 100%); }
+  .hero::before { content: ""; position: absolute; inset: 0; opacity: 0.5;
+    background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 34px 34px;
+    -webkit-mask-image: radial-gradient(closest-side at 50% 50%, #000 30%, transparent 100%); mask-image: radial-gradient(closest-side at 50% 50%, #000 30%, transparent 100%); }
+  .hero .ring { position: absolute; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.12); }
+  .hero .r1 { width: 220px; height: 220px; left: -60px; top: -90px; }
+  .hero .r2 { width: 300px; height: 300px; right: -90px; bottom: -150px; }
+  .hero .eyebrow { position: relative; font-size: 11px; letter-spacing: 0.35em; text-transform: uppercase; color: #9fb0d6; margin-bottom: 8px; }
+  .hero .title { position: relative; font-size: 30px; font-weight: 700; letter-spacing: 0.08em; color: #fff; text-shadow: 0 2px 18px rgba(90, 116, 176, 0.55); }
+  .hero .title b { color: #f0a27f; font-weight: 700; }
+  .hero .line { position: relative; width: 70px; height: 2px; margin-top: 12px; border-radius: 2px; background: linear-gradient(90deg, #d97757, #5a74b0); }
+  .sub { text-align: center; color: #8f95a3; margin-bottom: 28px; }
+  #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 14px; max-width: 1100px; margin: 0 auto; }
+  .tile { position: relative; background: rgba(38, 42, 54, 0.82); border: 1px solid #343947; border-radius: 14px; padding: 16px 12px 12px; cursor: pointer; text-align: center; min-height: 132px; }
+  .tile:hover { background: rgba(52, 58, 76, 0.95); border-color: #5a74b0; }
+  .tile .ico { position: relative; width: 52px; height: 52px; margin: 0 auto 8px; border-radius: 12px; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .tile .ico img { width: 36px; height: 36px; }
+  .tile .ico .fb { font-weight: 700; font-size: 22px; color: #222; }
+  .badge { position: absolute; right: -2px; bottom: -2px; min-width: 20px; height: 20px; padding: 0 5px; line-height: 20px; border-radius: 10px; background: #d97757; color: #fff; font-size: 12px; font-weight: 700; }
+  .tile .nm { font-weight: 600; }
+  .dot { position: absolute; top: 10px; left: 10px; width: 8px; height: 8px; border-radius: 50%; background: #4ade80; }
+  .edit { position: absolute; top: 6px; right: 6px; opacity: 0; background: transparent; border: none; color: #aab; cursor: pointer; font-size: 14px; padding: 2px 5px; border-radius: 4px; }
+  .tile:hover .edit { opacity: 1; }
+  .edit:hover { background: #3a3f4b; color: #fff; }
+  .use { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+  .urow { display: flex; align-items: center; gap: 5px; font-size: 10px; color: #aeb3be; }
+  .urow .l { width: 42%; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .urow .trk { flex: 1; height: 6px; border-radius: 3px; background: #3a3f4b; overflow: hidden; }
+  .urow .f { height: 100%; background: #d97757; }
+  .urow .f.warn { background: #e0a030; }
+  .urow .f.hot { background: #d64545; }
+  .urow .p { width: 30px; text-align: right; }
+  .umsg { font-size: 10px; color: #7f8592; }
+  .uref { background: transparent; border: none; color: #7f8592; font-size: 10px; cursor: pointer; padding: 0; margin-top: 2px; }
+  .uref:hover { color: #fff; }
+  .add .ico { background: transparent; border: 2px dashed #4a5060; color: #8f95a3; font-size: 28px; }
+  .add .nm { color: #8f95a3; }
+
+  #modal { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.55); display: none; align-items: center; justify-content: center; z-index: 5; }
+  #modal.show { display: flex; }
+  .card { width: 380px; background: #232733; border: 1px solid #3a3f4b; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+  .card h2 { margin: 0 0 4px; font-size: 15px; }
+  .card label { font-size: 11px; color: #9aa0ad; }
+  .card input { width: 100%; padding: 8px 10px; background: #1b1d24; border: 1px solid #3a3f4b; border-radius: 6px; color: #fff; font-size: 13px; }
+  .card input:focus { outline: none; border-color: #5a74b0; }
+  .actions { display: flex; gap: 8px; margin-top: 6px; }
+  .actions .sp { flex: 1; }
+  .btn.pri { background: #3b6fd4; border-color: #5a8cf0; color: #fff; }
+  .btn.del { color: #ff9a9a; }
 </style>
 </head>
 <body>
-<div id="strip"></div>
+<div id="bar">
+  <button class="btn" id="homeBtn">&#8962; Home</button>
+  <div id="chips"></div>
+  <button class="btn" id="reloadBtn" style="display:none">&#8635; Reload</button>
+</div>
+<div id="home">
+  <div class="hero">
+    <span class="ring r1"></span>
+    <span class="ring r2"></span>
+    <div class="eyebrow">Multi AI Workspace</div>
+    <div class="title">Designed by <b>NURUZZAMAN</b></div>
+    <div class="line"></div>
+  </div>
+  <div class="sub">Click an icon to open it. Logins are saved. Opened ones keep running in the background; switch from the top bar.</div>
+  <div id="grid"></div>
+</div>
+
+<div id="modal">
+  <div class="card">
+    <h2 id="mTitle">Add service</h2>
+    <label>Name</label>
+    <input id="mName" placeholder="e.g. Perplexity" spellcheck="false">
+    <label>Web address</label>
+    <input id="mUrl" placeholder="e.g. https://www.perplexity.ai/" spellcheck="false">
+    <div class="actions">
+      <button class="btn del" id="mDel" style="display:none">Remove</button>
+      <span class="sp"></span>
+      <button class="btn" id="mCancel">Cancel</button>
+      <button class="btn pri" id="mSave">Save</button>
+    </div>
+  </div>
+</div>
+
 <script>
-  const strip = document.getElementById('strip');
-  const cells = [];
-  let zoomed = -1;
+  let state = { services: [], order: [], active: null };
+  const usage = {};
+  let editingId = null;
 
-  function build(names) {
-    names.forEach((n, i) => {
-      const c = document.createElement('div');
-      c.className = 'cell';
-      c.innerHTML = `
-        <div class="top">
-          <input class="name" value="" spellcheck="false">
-          <button data-a="usage" title="Refresh usage">&#8635; usage</button>
-          <button data-a="reload" title="Reload Claude page">home</button>
-          <button data-a="zoom" title="Zoom this pane / back to all">zoom</button>
-        </div>
-        <div class="bars"><div class="msg">Log in on the page below. Usage appears after login.</div></div>
-        <div class="ts"></div>`;
-      const input = c.querySelector('.name');
-      input.value = n;
-      input.addEventListener('change', () => window.api.rename(i, input.value));
-      c.querySelector('[data-a=usage]').onclick = () => window.api.refreshUsage(i);
-      c.querySelector('[data-a=reload]').onclick = () => window.api.reload(i);
-      c.querySelector('[data-a=zoom]').onclick = () => window.api.zoom(i);
-      strip.appendChild(c);
-      cells.push(c);
+  const $ = (id) => document.getElementById(id);
+  function host(u) { try { return new URL(u).hostname; } catch (e) { return ''; } }
+  function favicon(u) { return 'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(host(u)) + '&sz=128'; }
+  function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+  function iconNode(s, size) {
+    const img = new Image();
+    img.src = favicon(s.url);
+    img.width = size; img.height = size;
+    return img;
+  }
+
+  function renderBar() {
+    $('homeBtn').classList.toggle('on', state.active === null);
+    $('reloadBtn').style.display = state.active === null ? 'none' : '';
+    const chips = $('chips');
+    chips.innerHTML = '';
+    state.order.forEach((id) => {
+      const s = state.services.find((x) => x.id === id);
+      if (!s) return;
+      const c = el('div', 'chip' + (state.active === id ? ' on' : ''));
+      c.appendChild(iconNode(s, 16));
+      c.appendChild(el('span', 't', s.name));
+      const x = el('span', 'x', '×');
+      x.title = 'Close (login stays saved)';
+      x.onclick = (ev) => { ev.stopPropagation(); window.api.close(id); };
+      c.appendChild(x);
+      c.onclick = () => window.api.open(id);
+      chips.appendChild(c);
     });
   }
 
-  function showUsage(d) {
-    const c = cells[d.id];
-    const bars = c.querySelector('.bars');
-    const ts = c.querySelector('.ts');
-    if (d.loading) { ts.textContent = 'Updating usage...'; return; }
-    ts.textContent = 'Updated ' + new Date(d.ts).toLocaleTimeString();
-    bars.innerHTML = '';
-    if (d.error) {
-      const m = document.createElement('div');
-      m.className = d.error === 'Not logged in' ? 'msg' : 'err';
-      m.textContent = d.error === 'Not logged in' ? 'Not logged in yet. Log in below, then press usage.' : d.error;
-      bars.appendChild(m);
-      return;
+  function usageNode(s) {
+    const box = el('div', 'use');
+    const u = usage[s.id];
+    if (!u) { box.appendChild(el('div', 'umsg', 'Usage appears after login')); }
+    else if (u.loading) { box.appendChild(el('div', 'umsg', 'Updating usage...')); }
+    else if (u.error) {
+      box.appendChild(el('div', 'umsg', u.error === 'Not logged in' ? 'Not logged in yet' : u.error));
+    } else {
+      u.items.slice(0, 2).forEach((it) => {
+        const r = el('div', 'urow');
+        r.appendChild(el('span', 'l', it.label));
+        const trk = el('div', 'trk');
+        const f = el('div', 'f' + (it.pct >= 90 ? ' hot' : it.pct >= 70 ? ' warn' : ''));
+        f.style.width = it.pct + '%';
+        trk.appendChild(f);
+        r.appendChild(trk);
+        r.appendChild(el('span', 'p', Math.round(it.pct) + '%'));
+        r.title = it.text;
+        box.appendChild(r);
+      });
     }
-    d.items.slice(0, 3).forEach((it) => {
-      const r = document.createElement('div');
-      r.className = 'row';
-      const cls = it.pct >= 90 ? 'hot' : it.pct >= 70 ? 'warn' : '';
-      r.innerHTML = `<span class="lbl"></span><div class="track"><div class="fill ${cls}" style="width:${it.pct}%"></div></div><span class="pct">${Math.round(it.pct)}%</span>`;
-      r.querySelector('.lbl').textContent = it.label;
-      r.title = it.text;
-      bars.appendChild(r);
-    });
+    const ref = el('button', 'uref', '↻ refresh usage');
+    ref.onclick = (ev) => { ev.stopPropagation(); window.api.refreshUsage(s.id); };
+    box.appendChild(ref);
+    return box;
   }
 
-  window.api.onInit((d) => build(d.names));
-  window.api.onUsage(showUsage);
-  window.api.onZoomed((z) => {
-    zoomed = z;
-    cells.forEach((c, i) => c.classList.toggle('hidden', z >= 0 && i !== z));
+  function renderGrid() {
+    const grid = $('grid');
+    grid.innerHTML = '';
+    state.services.forEach((s) => {
+      const t = el('div', 'tile');
+      if (state.order.includes(s.id)) t.appendChild(el('span', 'dot'));
+      const ed = el('button', 'edit', '✎');
+      ed.title = 'Edit';
+      ed.onclick = (ev) => { ev.stopPropagation(); openModal(s); };
+      t.appendChild(ed);
+      const ico = el('div', 'ico');
+      const img = iconNode(s, 36);
+      img.onerror = () => { img.remove(); ico.insertBefore(el('span', 'fb', s.name.charAt(0).toUpperCase()), ico.firstChild); };
+      ico.appendChild(img);
+      if (s.badge) ico.appendChild(el('span', 'badge', s.badge));
+      t.appendChild(ico);
+      t.appendChild(el('div', 'nm', s.name));
+      if (s.kind === 'claude') t.appendChild(usageNode(s));
+      t.onclick = () => window.api.open(s.id);
+      grid.appendChild(t);
+    });
+    const a = el('div', 'tile add');
+    a.appendChild(el('div', 'ico', '+'));
+    a.appendChild(el('div', 'nm', 'Add'));
+    a.onclick = () => openModal(null);
+    grid.appendChild(a);
+  }
+
+  function render() { renderBar(); renderGrid(); }
+
+  function openModal(s) {
+    editingId = s ? s.id : null;
+    $('mTitle').textContent = s ? 'Edit ' + s.name : 'Add service';
+    $('mName').value = s ? s.name : '';
+    $('mUrl').value = s ? s.url : '';
+    $('mDel').style.display = s ? '' : 'none';
+    $('modal').classList.add('show');
+    $('mName').focus();
+  }
+  function closeModal() { $('modal').classList.remove('show'); }
+
+  $('mCancel').onclick = closeModal;
+  $('mSave').onclick = () => {
+    window.api.saveService({ id: editingId, name: $('mName').value, url: $('mUrl').value });
+    closeModal();
+  };
+  $('mDel').onclick = () => { if (editingId) window.api.deleteService(editingId); closeModal(); };
+  $('homeBtn').onclick = () => window.api.home();
+  $('reloadBtn').onclick = () => window.api.reloadActive();
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+  window.api.onState((s) => { state = s; render(); });
+  window.api.onUsage((u) => {
+    usage[u.id] = u;
+    renderGrid();
   });
 </script>
 </body>

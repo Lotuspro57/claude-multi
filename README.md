@@ -1,26 +1,30 @@
-# Claude Multi
+# Multi AI
 
-Four Claude accounts side by side in one window. Each pane keeps its own saved login, so you sign in once per account.
+One app, one home screen of icons: Claude 1 to 4, ChatGPT, Gemini, Grok, DeepSeek, Perplexity, Copilot, NotebookLM, Mistral, plus anything you add.
 
-## Run
+- Click an icon to open that service full-size.
+- Each service has its own saved login (log in once, it stays after you close the app).
+- Opened services keep running in the background. Switch between them with the tabs in the top bar, or press Home to go back to the icons.
+- The x on a tab closes it (the login stays saved).
+- Claude tiles show usage bars read from each account's claude.ai Settings > Usage page (refresh every 5 minutes).
+- Hover a tile and click the pencil to rename it, change its address or remove it. The + tile adds a new service.
 
-1. Install Node.js (https://nodejs.org) if you don't have it.
-2. In this folder:
+## Build the Windows app on GitHub
+
+1. Upload these files to your GitHub repository (main.js, preload.js, index.html, package.json, README.md) and commit. Same names replace the old ones.
+2. Open the Actions tab and wait for the green check (about 3 minutes).
+3. Open the run, download `Claude-Multi-Windows` from Artifacts, unzip, and run the setup .exe. Installing over the old version keeps your saved logins.
+
+## Run locally instead
 
 ```
 npm install
 npm start
 ```
 
-## Use
-
-- Log in to each of the four panes once. Logins are stored on your computer and stay after you close the app.
-- The strip above each pane shows that account's usage bars, read from its claude.ai Settings > Usage page. It refreshes every 5 minutes, or press "usage".
-- Click the account name to rename it. "zoom" enlarges one pane; click it again to go back.
-- "home" returns a pane to claude.ai.
+Run these in the folder that contains `package.json`.
 
 ## Notes
 
-- Usage is read from the text of the usage page, so if claude.ai changes that page the bars may need a small update in `fetchUsage` in `main.js`.
-- This does not use the browser extension; it reads the same page directly.
-- Sign-in with Google may refuse to work inside embedded apps. If so, use email login for that account.
+- Google sign-in may still refuse in some cases. If so, use email login for that service.
+- Usage bars rely on the text of claude.ai's usage page, so they may need a small update if that page changes.
