@@ -11,6 +11,13 @@
   .btn { background: #262a33; color: #d7d4d0; border: 1px solid #3a3f4b; border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: 12px; }
   .btn:hover { background: #323744; color: #fff; }
   .btn.on { background: #3b4a6b; border-color: #5a74b0; color: #fff; }
+  #tools { align-items: center; gap: 6px; }
+  .zoomgrp { display: flex; }
+  .zoomgrp .btn { border-radius: 0; margin-left: -1px; min-width: 30px; }
+  .zoomgrp .btn:first-child { border-radius: 6px 0 0 6px; margin-left: 0; }
+  .zoomgrp .btn:last-child { border-radius: 0 6px 6px 0; }
+  #zVal { min-width: 52px; }
+  .chip.split { border-style: dashed; border-color: #5a74b0; }
   #chips { display: flex; gap: 6px; flex: 1; min-width: 0; overflow: hidden; }
   .chip { display: flex; align-items: center; gap: 6px; padding: 4px 6px 4px 8px; max-width: 170px; background: #232733; border: 1px solid #343947; border-radius: 6px; cursor: pointer; }
   .chip:hover { background: #2d3342; }
@@ -85,7 +92,15 @@
 <div id="bar">
   <button class="btn" id="homeBtn">&#8962; Home</button>
   <div id="chips"></div>
-  <button class="btn" id="reloadBtn" style="display:none">&#8635; Reload</button>
+  <div id="tools" style="display:none">
+    <button class="btn" id="splitBtn" title="Show two apps side by side">&#9707; Split</button>
+    <span class="zoomgrp">
+      <button class="btn" id="zOut" title="Zoom out (Ctrl -)">&minus;</button>
+      <button class="btn" id="zVal" title="Reset zoom (Ctrl 0)">100%</button>
+      <button class="btn" id="zIn" title="Zoom in (Ctrl +)">+</button>
+    </span>
+    <button class="btn" id="reloadBtn" title="Reload">&#8635;</button>
+  </div>
 </div>
 <div id="home">
   <div class="hero">
@@ -95,7 +110,7 @@
     <div class="title">Designed by <b>NURUZZAMAN</b></div>
     <div class="line"></div>
   </div>
-  <div class="sub">Click an icon to open it. Logins are saved. Opened ones keep running in the background; switch from the top bar.</div>
+  <div class="sub">Click an icon to open it. Logins are saved. Opened ones keep running in the background; switch from the top bar. Right-click an icon for split screen, zoom and more.</div>
   <div id="grid"></div>
 </div>
 
@@ -140,13 +155,17 @@
 
   function renderBar() {
     $('homeBtn').classList.toggle('on', state.active === null);
-    $('reloadBtn').style.display = state.active === null ? 'none' : '';
+    $('tools').style.display = state.active === null ? 'none' : 'flex';
+    $('splitBtn').classList.toggle('on', !!state.split);
+    const tgt = state.services.find((x) => x.id === state.target);
+    $('zVal').textContent = Math.round(((tgt && tgt.zoom) || 1) * 100) + '%';
+    $('zVal').title = 'Reset zoom' + (tgt ? ' for ' + tgt.name : '') + ' (Ctrl 0)';
     const chips = $('chips');
     chips.innerHTML = '';
     state.order.forEach((id) => {
       const s = state.services.find((x) => x.id === id);
       if (!s) return;
-      const c = el('div', 'chip' + (state.active === id ? ' on' : ''));
+      const c = el('div', 'chip' + (state.active === id || state.split === id ? ' on' : '') + (state.split === id ? ' split' : ''));
       c.appendChild(iconNode(s, 16));
       c.appendChild(el('span', 't', s.name));
       const x = el('span', 'x', '×');
@@ -154,6 +173,7 @@
       x.onclick = (ev) => { ev.stopPropagation(); window.api.close(id); };
       c.appendChild(x);
       c.onclick = () => window.api.open(id);
+      c.oncontextmenu = (ev) => { ev.preventDefault(); window.api.contextMenu(id); };
       chips.appendChild(c);
     });
   }
@@ -204,6 +224,7 @@
       t.appendChild(el('div', 'nm', s.name));
       if (s.kind === 'claude') t.appendChild(usageNode(s));
       t.onclick = () => window.api.open(s.id);
+      t.oncontextmenu = (ev) => { ev.preventDefault(); window.api.contextMenu(s.id); };
       grid.appendChild(t);
     });
     const a = el('div', 'tile add');
@@ -235,6 +256,14 @@
   $('mDel').onclick = () => { if (editingId) window.api.deleteService(editingId); closeModal(); };
   $('homeBtn').onclick = () => window.api.home();
   $('reloadBtn').onclick = () => window.api.reloadActive();
+  $('splitBtn').onclick = () => window.api.splitMenu();
+  $('zIn').onclick = () => window.api.zoom('in');
+  $('zOut').onclick = () => window.api.zoom('out');
+  $('zVal').onclick = () => window.api.zoom('reset');
+  window.api.onEdit((id) => {
+    const s = state.services.find((x) => x.id === id);
+    if (s) openModal(s);
+  });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
 
   window.api.onState((s) => { state = s; render(); });
