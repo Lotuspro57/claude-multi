@@ -32,5 +32,5 @@ Run these in the folder that contains `package.json`.
 
 ## Notes
 
-- Google blocks its own sign-in inside apps like this one. Use email or password login (for Claude, "Continue with email") instead of "Continue with Google". Gemini and NotebookLM need a Google account, so use a normal browser for them.
+- Google blocks its own sign-in inside apps like this one. Gemini and NotebookLM (and any tile with the blue arrow) therefore open in your normal browser, where you are already signed in. Turn this on for any other tile with "Open in my browser instead" in its Edit window. For other services, use email or password login (for Claude, "Continue with email") instead of "Continue with Google". Manus also offers email, Microsoft and Apple sign-in.
 - Usage bars rely on the text of claude.ai's usage page, so they may need a small update if that page changes.

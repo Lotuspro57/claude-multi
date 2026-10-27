@@ -20,13 +20,14 @@ const DEFAULTS = [
   { id: 'claude3', name: 'Claude 3', url: 'https://claude.ai/', kind: 'claude', badge: '3', partition: 'persist:acct2' },
   { id: 'claude4', name: 'Claude 4', url: 'https://claude.ai/', kind: 'claude', badge: '4', partition: 'persist:acct3' },
   { id: 'chatgpt', name: 'ChatGPT', url: 'https://chatgpt.com/', partition: 'persist:svc-chatgpt' },
-  { id: 'gemini', name: 'Gemini', url: 'https://gemini.google.com/', partition: 'persist:svc-gemini' },
+  { id: 'gemini', name: 'Gemini', url: 'https://gemini.google.com/', partition: 'persist:svc-gemini', external: true },
   { id: 'grok', name: 'Grok', url: 'https://grok.com/', partition: 'persist:svc-grok' },
   { id: 'deepseek', name: 'DeepSeek', url: 'https://chat.deepseek.com/', partition: 'persist:svc-deepseek' },
   { id: 'perplexity', name: 'Perplexity', url: 'https://www.perplexity.ai/', partition: 'persist:svc-perplexity' },
   { id: 'copilot', name: 'Copilot', url: 'https://copilot.microsoft.com/', partition: 'persist:svc-copilot' },
-  { id: 'notebooklm', name: 'NotebookLM', url: 'https://notebooklm.google.com/', partition: 'persist:svc-notebooklm' },
-  { id: 'mistral', name: 'Mistral', url: 'https://chat.mistral.ai/', partition: 'persist:svc-mistral' }
+  { id: 'notebooklm', name: 'NotebookLM', url: 'https://notebooklm.google.com/', partition: 'persist:svc-notebooklm', external: true },
+  { id: 'mistral', name: 'Mistral', url: 'https://chat.mistral.ai/', partition: 'persist:svc-mistral' },
+  { id: 'manus', name: 'Manus', url: 'https://manus.im/', partition: 'persist:svc-manus' }
 ];
 
 let win, ui, uiReady = false;
@@ -70,7 +71,12 @@ function loadServices() {
   const data = readJson(servicesFile, null);
   if (Array.isArray(data)) {
     const clean = data.filter(validService);
-    if (clean.length) { services = clean; return; }
+    if (clean.length) {
+      // Google sites block Google sign-in inside apps, so they open in the normal browser by default.
+      clean.forEach((s) => { if (s.external === undefined) s.external = isGoogleSite(s.url); });
+      services = clean;
+      return;
+    }
   }
   // Everything except the four Claude accounts shares one saved login by default.
   services = DEFAULTS.map((s) => ({ ...s, partition: s.kind === 'claude' ? s.partition : SHARED }));
@@ -118,6 +124,7 @@ function normalizeUrl(u) {
 function hostOf(u) {
   try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return ''; }
 }
+function isGoogleSite(u) { return /(^|\.)google\.com$/.test(hostOf(u)); }
 function find(id) { return services.find((x) => x.id === id); }
 
 function visibleIds() {
@@ -278,7 +285,9 @@ function ensureView(id) {
 }
 
 function openService(id) {
-  if (!find(id)) return;
+  const svc = find(id);
+  if (!svc) return;
+  if (svc.external) { shell.openExternal(svc.url); return; }
   ensureView(id);
   if (split === id) split = null;
   active = id;
@@ -317,7 +326,7 @@ function closeService(id) {
 // ---------- split screen ----------
 
 function setSplit(id) {
-  if (!find(id) || active === null || id === active) return;
+  if (!find(id) || find(id).external || active === null || id === active) return;
   ensureView(id);
   split = id;
   focused = id;
@@ -441,7 +450,7 @@ function createWindow() {
 
   // reopen the apps that were open last time
   if (Array.isArray(saved.order)) {
-    saved.order.filter((id) => find(id)).forEach((id) => ensureView(id));
+    saved.order.filter((id) => find(id) && !find(id).external).forEach((id) => ensureView(id));
     if (saved.active && views.has(saved.active)) active = saved.active;
     if (saved.split && views.has(saved.split) && saved.split !== active) split = saved.split;
     if (active === null) split = null;
@@ -507,9 +516,10 @@ ipcMain.on('context-menu', (e, id) => {
     { label: 'Open', click: () => openService(id) },
     {
       label: 'Show beside current app (split screen)',
-      enabled: active !== null && active !== id,
+      enabled: active !== null && active !== id && !s.external,
       click: () => setSplit(id)
-    }
+    },
+    { label: 'Open in my browser', click: () => shell.openExternal(s.url) }
   ];
   if (split === id) items.push({ label: 'Close split screen', click: () => closeSplit() });
   items.push(
@@ -526,7 +536,7 @@ ipcMain.on('context-menu', (e, id) => {
   Menu.buildFromTemplate(items).popup({ window: win });
 });
 
-ipcMain.on('save-service', (e, { id, name, url, shared }) => {
+ipcMain.on('save-service', (e, { id, name, url, shared, external }) => {
   name = String(name || '').trim();
   url = normalizeUrl(url);
   if (!name || !url) return;
@@ -535,6 +545,8 @@ ipcMain.on('save-service', (e, { id, name, url, shared }) => {
     if (s) {
       s.name = name;
       s.url = url;
+      s.external = !!external;
+      if (s.external) closeService(id);
       const wanted = shared ? SHARED : unsharedPartition(id);
       if (s.partition !== wanted) {
         closeService(id); // reopen it to use the new login storage
@@ -543,7 +555,7 @@ ipcMain.on('save-service', (e, { id, name, url, shared }) => {
     }
   } else {
     const nid = 'c' + Date.now();
-    services.push({ id: nid, name, url, partition: shared ? SHARED : 'persist:svc-' + nid });
+    services.push({ id: nid, name, url, external: !!external, partition: shared ? SHARED : 'persist:svc-' + nid });
   }
   saveServices();
   pushState();

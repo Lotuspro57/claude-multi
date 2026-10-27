@@ -53,6 +53,7 @@
   .tile .ico img { width: 36px; height: 36px; }
   .tile .ico .fb { font-weight: 700; font-size: 22px; color: #222; }
   .badge { position: absolute; right: -2px; bottom: -2px; min-width: 20px; height: 20px; padding: 0 5px; line-height: 20px; border-radius: 10px; background: #d97757; color: #fff; font-size: 12px; font-weight: 700; }
+  .badge.ext { background: #3b6fd4; }
   .tile .nm { font-weight: 600; }
   .dot { position: absolute; top: 10px; left: 10px; width: 8px; height: 8px; border-radius: 50%; background: #4ade80; }
   .edit { position: absolute; top: 6px; right: 6px; opacity: 0; background: transparent; border: none; color: #aab; cursor: pointer; font-size: 14px; padding: 2px 5px; border-radius: 4px; }
@@ -123,6 +124,8 @@
     <input id="mUrl" placeholder="e.g. https://www.perplexity.ai/" spellcheck="false">
     <label class="chk"><input type="checkbox" id="mShared"> Share login with other apps</label>
     <div class="hint">On: sign in once (for example with Google) and every other app with this on can reuse it. Off: this app keeps its own separate login. Keep it off for each Claude account so they stay different accounts.</div>
+    <label class="chk"><input type="checkbox" id="mExternal"> Open in my browser instead</label>
+    <div class="hint">Use this for Google sites (Gemini, NotebookLM). Google blocks its sign-in inside apps, so the tile opens in your normal browser, where you are already signed in.</div>
     <div class="actions">
       <button class="btn del" id="mDel" style="display:none">Remove</button>
       <span class="sp"></span>
@@ -220,6 +223,7 @@
       img.onerror = () => { img.remove(); ico.insertBefore(el('span', 'fb', s.name.charAt(0).toUpperCase()), ico.firstChild); };
       ico.appendChild(img);
       if (s.badge) ico.appendChild(el('span', 'badge', s.badge));
+      if (s.external) { const x = el('span', 'badge ext', '↗'); x.title = 'Opens in your browser'; ico.appendChild(x); }
       t.appendChild(ico);
       t.appendChild(el('div', 'nm', s.name));
       if (s.kind === 'claude') t.appendChild(usageNode(s));
@@ -242,15 +246,19 @@
     $('mName').value = s ? s.name : '';
     $('mUrl').value = s ? s.url : '';
     $('mShared').checked = s ? s.partition === 'persist:shared' : true;
+    $('mExternal').checked = s ? !!s.external : false;
     $('mDel').style.display = s ? '' : 'none';
     $('modal').classList.add('show');
     $('mName').focus();
   }
   function closeModal() { $('modal').classList.remove('show'); }
 
+  $('mUrl').addEventListener('input', () => {
+    if (!editingId && /(^|\/\/|\.)google\.com/i.test($('mUrl').value)) $('mExternal').checked = true;
+  });
   $('mCancel').onclick = closeModal;
   $('mSave').onclick = () => {
-    window.api.saveService({ id: editingId, name: $('mName').value, url: $('mUrl').value, shared: $('mShared').checked });
+    window.api.saveService({ id: editingId, name: $('mName').value, url: $('mUrl').value, shared: $('mShared').checked, external: $('mExternal').checked });
     closeModal();
   };
   $('mDel').onclick = () => { if (editingId) window.api.deleteService(editingId); closeModal(); };
