@@ -1,19 +1,28 @@
-(() => {
+// Runs before any page script in each service view.
+// Hides passkey (WebAuthn) support so Google and others show the normal password login
+// instead of the Windows Security passkey box.
+const { webFrame } = require('electron');
+
+webFrame.executeJavaScript(`
+(function () {
   try {
-    // Disable WebAuthn APIs to avoid prompts and compatibility issues inside embedded views.
-    if (window.PublicKeyCredential) {
-      try { delete window.PublicKeyCredential; } catch (e) { window.PublicKeyCredential = undefined; }
-    }
-    if (navigator.credentials) {
-      navigator.credentials.create = () => Promise.reject(new Error('WebAuthn disabled by app'));
-      navigator.credentials.get = () => Promise.reject(new Error('WebAuthn disabled by app'));
-    } else {
-      navigator.credentials = {
-        create: () => Promise.reject(new Error('WebAuthn disabled by app')),
-        get: () => Promise.reject(new Error('WebAuthn disabled by app'))
+    Object.defineProperty(window, 'PublicKeyCredential', { value: undefined, configurable: true, writable: true });
+  } catch (e) {}
+  try {
+    const cc = navigator.credentials;
+    if (cc) {
+      const deny = () => Promise.reject(new DOMException('The operation is not allowed.', 'NotAllowedError'));
+      const origGet = cc.get ? cc.get.bind(cc) : null;
+      const origCreate = cc.create ? cc.create.bind(cc) : null;
+      cc.get = function (opts) {
+        if (opts && opts.publicKey) return deny();
+        return origGet ? origGet(opts) : deny();
+      };
+      cc.create = function (opts) {
+        if (opts && opts.publicKey) return deny();
+        return origCreate ? origCreate(opts) : deny();
       };
     }
-  } catch (e) {
-    // best-effort, don't crash
-  }
+  } catch (e) {}
 })();
+`);

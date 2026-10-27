@@ -1,6 +1,6 @@
 {
   "name": "claude-multi",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Multi AI launcher: Claude accounts, ChatGPT, Gemini and more with saved logins",
   "author": "Claude Multi",
   "main": "main.js",
@@ -15,7 +15,7 @@
   "build": {
     "appId": "com.local.claudemulti",
     "productName": "Claude Multi",
-    "files": ["main.js", "preload.js", "index.html", "package.json"],
+    "files": ["main.js", "preload.js", "webauthn-off.js", "index.html", "package.json"],
     "win": {
       "target": ["nsis", "portable"]
     },
