@@ -1,4 +1,4 @@
-const { app, BaseWindow, WebContentsView, BrowserWindow, ipcMain, shell, Menu, screen } = require('electron');
+const { app, BaseWindow, WebContentsView, BrowserWindow, ipcMain, shell, Menu, screen, clipboard } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -139,9 +139,26 @@ function focusId() {
   return active;
 }
 
+// ---------- back / forward inside the page you are working in ----------
+
+function navState(id) {
+  const v = id && views.get(id);
+  if (!v || v.webContents.isDestroyed()) return { back: false, forward: false };
+  const h = v.webContents.navigationHistory;
+  return { back: h.canGoBack(), forward: h.canGoForward() };
+}
+function navigate(id, dir) {
+  const v = id && views.get(id);
+  if (!v || v.webContents.isDestroyed()) return;
+  const h = v.webContents.navigationHistory;
+  if (dir === 'back' && h.canGoBack()) h.goBack();
+  else if (dir === 'forward' && h.canGoForward()) h.goForward();
+}
+
 function pushState() {
   if (!uiReady || !ui || ui.webContents.isDestroyed()) return;
-  ui.webContents.send('state', { services, order, active, split, target: focusId() });
+  const target = focusId();
+  ui.webContents.send('state', { services, order, active, split, target, nav: navState(target) });
 }
 function sendToUI(channel, payload) {
   if (!uiReady || !ui || ui.webContents.isDestroyed()) return;
@@ -202,6 +219,7 @@ function createView(s) {
   const v = new WebContentsView({ webPreferences: viewPrefs });
   const wc = v.webContents;
   wc.setUserAgent(UA);
+  setupSpellcheck(wc.session);
   const myHost = hostOf(s.url);
 
   wc.setWindowOpenHandler(({ url }) => {
@@ -223,8 +241,15 @@ function createView(s) {
 
   // zoom: keep each service's zoom level, and Ctrl +, Ctrl -, Ctrl 0 work inside the page
   wc.on('dom-ready', () => applyZoom(s.id));
-  wc.on('did-navigate', () => applyZoom(s.id));
+  wc.on('did-navigate', () => { applyZoom(s.id); pushState(); });
+  wc.on('did-navigate-in-page', () => pushState());
   wc.on('before-input-event', (e, input) => {
+    // Alt + Left / Alt + Right = back / forward
+    if (input.type === 'keyDown' && input.alt && !input.control && !input.meta) {
+      if (input.key === 'ArrowLeft') { e.preventDefault(); navigate(s.id, 'back'); }
+      else if (input.key === 'ArrowRight') { e.preventDefault(); navigate(s.id, 'forward'); }
+      return;
+    }
     if (input.type !== 'keyDown' || !(input.control || input.meta) || input.alt) return;
     if (input.key === '=' || input.key === '+') { e.preventDefault(); changeZoom(s.id, 'in'); }
     else if (input.key === '-' || input.key === '_') { e.preventDefault(); changeZoom(s.id, 'out'); }
@@ -236,22 +261,56 @@ function createView(s) {
     if (focused !== s.id) { focused = s.id; pushState(); }
   });
 
-  // right-click inside a page: copy / paste / open link
+  // right-click inside a page: spelling suggestions, copy / paste, links, images, back / forward
   wc.on('context-menu', (e, p) => {
     const items = [];
-    if (p.linkURL && /^https?:/i.test(p.linkURL)) {
-      items.push({ label: 'Open link in browser', click: () => shell.openExternal(p.linkURL) });
+    const sep = () => { if (items.length && items[items.length - 1].type !== 'separator') items.push({ type: 'separator' }); };
+
+    // misspelled word: show corrections and "Add to dictionary"
+    if (p.isEditable && p.misspelledWord) {
+      const sugg = (p.dictionarySuggestions || []).slice(0, 6);
+      if (sugg.length) {
+        sugg.forEach((w) => items.push({ label: w, click: () => wc.replaceMisspelling(w) }));
+      } else {
+        items.push({ label: 'No spelling suggestions', enabled: false });
+      }
+      items.push({ type: 'separator' });
+      items.push({
+        label: 'Add "' + p.misspelledWord + '" to dictionary',
+        click: () => wc.session.addWordToSpellCheckerDictionary(p.misspelledWord)
+      });
       items.push({ type: 'separator' });
     }
+
+    if (p.linkURL && /^https?:/i.test(p.linkURL)) {
+      items.push({ label: 'Open link in browser', click: () => shell.openExternal(p.linkURL) });
+      items.push({ label: 'Copy link address', click: () => clipboard.writeText(p.linkURL) });
+      sep();
+    }
+    if (p.mediaType === 'image') {
+      items.push({ label: 'Copy image', click: () => wc.copyImageAt(p.x, p.y) });
+      sep();
+    }
+
     if (p.isEditable) {
+      items.push({ role: 'undo', enabled: p.editFlags.canUndo });
+      items.push({ role: 'redo', enabled: p.editFlags.canRedo });
+      items.push({ type: 'separator' });
       items.push({ role: 'cut', enabled: p.editFlags.canCut });
       items.push({ role: 'copy', enabled: p.editFlags.canCopy });
       items.push({ role: 'paste', enabled: p.editFlags.canPaste });
+      items.push({ role: 'pasteAndMatchStyle', label: 'Paste as plain text', enabled: p.editFlags.canPaste });
       items.push({ role: 'selectAll' });
     } else if (p.selectionText) {
       items.push({ role: 'copy' });
+      items.push({ role: 'selectAll' });
+    } else {
+      items.push({ role: 'selectAll' });
     }
-    if (items.length) items.push({ type: 'separator' });
+    sep();
+    const h = wc.navigationHistory;
+    items.push({ label: 'Back', enabled: h.canGoBack(), click: () => h.goBack() });
+    items.push({ label: 'Forward', enabled: h.canGoForward(), click: () => h.goForward() });
     items.push({ label: 'Reload', click: () => wc.reload() });
     Menu.buildFromTemplate(items).popup({ window: win });
   });
@@ -270,6 +329,19 @@ function createView(s) {
 
   wc.loadURL(s.url);
   return v;
+}
+
+// Spell checking: English plus your Windows language (dictionaries download once, then work offline).
+const spellDone = new WeakSet();
+function setupSpellcheck(ses) {
+  if (spellDone.has(ses)) return;
+  spellDone.add(ses);
+  try {
+    ses.setSpellCheckerEnabled(true);
+    const avail = ses.availableSpellCheckerLanguages;
+    const want = ['en-US', app.getLocale()].filter((l, i, a) => l && a.indexOf(l) === i && avail.includes(l));
+    if (want.length) ses.setSpellCheckerLanguages(want);
+  } catch (e) {}
 }
 
 function ensureView(id) {
@@ -461,6 +533,11 @@ function createWindow() {
   win.on('move', saveStateSoon);
   win.on('maximize', () => { layout(); saveStateSoon(); });
   win.on('unmaximize', () => { layout(); saveStateSoon(); });
+  // mouse side buttons / keyboard back and forward keys (Windows)
+  win.on('app-command', (e, cmd) => {
+    if (cmd === 'browser-backward') navigate(focusId(), 'back');
+    else if (cmd === 'browser-forward') navigate(focusId(), 'forward');
+  });
   win.on('close', saveStateNow);
   win.on('closed', () => app.quit());
   layout();
@@ -479,6 +556,7 @@ ipcMain.on('reload-active', () => {
   if (id && views.get(id)) views.get(id).webContents.reload();
 });
 ipcMain.on('refresh-usage', (e, id) => refreshUsage(id));
+ipcMain.on('nav', (e, dir) => navigate(focusId(), dir));
 
 ipcMain.on('zoom', (e, dir) => {
   const id = focusId();

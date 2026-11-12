@@ -11,6 +11,8 @@ contextBridge.exposeInMainWorld('api', {
   home: () => ipcRenderer.send('home'),
   close: (id) => ipcRenderer.send('close', id),
   reloadActive: () => ipcRenderer.send('reload-active'),
+  // dir is 'back' or 'forward'
+  nav: (dir) => ipcRenderer.send('nav', dir),
 
   // zoom: dir is 'in', 'out' or 'reset'
   zoom: (dir) => ipcRenderer.send('zoom', dir),

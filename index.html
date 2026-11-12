@@ -11,6 +11,9 @@
   .btn { background: #262a33; color: #d7d4d0; border: 1px solid #3a3f4b; border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: 12px; }
   .btn:hover { background: #323744; color: #fff; }
   .btn.on { background: #3b4a6b; border-color: #5a74b0; color: #fff; }
+  #nav { align-items: center; gap: 4px; }
+  .btn:disabled { opacity: 0.35; cursor: default; }
+  .btn:disabled:hover { background: #262a33; color: #d7d4d0; }
   #tools { align-items: center; gap: 6px; }
   .zoomgrp { display: flex; }
   .zoomgrp .btn { border-radius: 0; margin-left: -1px; min-width: 30px; }
@@ -91,6 +94,10 @@
 </head>
 <body>
 <div id="bar">
+  <div id="nav" style="display:none">
+    <button class="btn" id="backBtn" title="Back (Alt + Left)" disabled>&#8592;</button>
+    <button class="btn" id="fwdBtn" title="Forward (Alt + Right)" disabled>&#8594;</button>
+  </div>
   <button class="btn" id="homeBtn">&#8962; Home</button>
   <div id="chips"></div>
   <div id="tools" style="display:none">
@@ -159,6 +166,9 @@
   function renderBar() {
     $('homeBtn').classList.toggle('on', state.active === null);
     $('tools').style.display = state.active === null ? 'none' : 'flex';
+    $('nav').style.display = state.active === null ? 'none' : 'flex';
+    $('backBtn').disabled = !(state.nav && state.nav.back);
+    $('fwdBtn').disabled = !(state.nav && state.nav.forward);
     $('splitBtn').classList.toggle('on', !!state.split);
     const tgt = state.services.find((x) => x.id === state.target);
     $('zVal').textContent = Math.round(((tgt && tgt.zoom) || 1) * 100) + '%';
@@ -264,6 +274,8 @@
   $('mDel').onclick = () => { if (editingId) window.api.deleteService(editingId); closeModal(); };
   $('homeBtn').onclick = () => window.api.home();
   $('reloadBtn').onclick = () => window.api.reloadActive();
+  $('backBtn').onclick = () => window.api.nav('back');
+  $('fwdBtn').onclick = () => window.api.nav('forward');
   $('splitBtn').onclick = () => window.api.splitMenu();
   $('zIn').onclick = () => window.api.zoom('in');
   $('zOut').onclick = () => window.api.zoom('out');
