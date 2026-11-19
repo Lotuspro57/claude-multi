@@ -5,6 +5,9 @@ on:
     branches: [main, master]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-latest
@@ -23,9 +26,22 @@ jobs:
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
 
-      - name: Upload app
+      - name: Read app version
+        id: ver
+        shell: bash
+        run: echo "v=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Keep a copy as a build artifact
         uses: actions/upload-artifact@v4
         with:
           name: Claude-Multi-Windows
           path: |
             dist/*.exe
+
+      - name: Publish a download link (GitHub Release)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.ver.outputs.v }}
+          name: Multi AI ${{ steps.ver.outputs.v }}
+          body: Download the file named Setup, run it, and click More info then Run anyway if Windows asks.
+          files: dist/*.exe
