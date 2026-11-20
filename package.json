@@ -1,6 +1,6 @@
 {
   "name": "claude-multi",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "description": "Multi AI launcher: Claude accounts, ChatGPT, Gemini and more with saved logins",
   "author": "Claude Multi",
   "main": "main.js",

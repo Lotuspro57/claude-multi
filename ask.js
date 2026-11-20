@@ -130,10 +130,16 @@ module.exports = function createAsk(deps) {
   }
 
   async function runOn(jobState, svc, prompt, emit) {
+    try { return await runOn2(jobState, svc, prompt, emit); }
+    finally { deps.live(svc.id, false); }
+  }
+
+  async function runOn2(jobState, svc, prompt, emit) {
     const site = siteFor(svc) || GENERIC;
     const view = deps.ensureView(svc.id);
     if (!view) return { ok: false, status: 'failed', note: 'Could not open' };
     const wc = view.webContents;
+    deps.live(svc.id, true);
     emit('trying', 'Opening ' + svc.name + '...');
     await loadFresh(wc, site, site.fresh || svc.url);
     if (jobState.cancelled) return { ok: false, status: 'cancelled' };
@@ -142,7 +148,7 @@ module.exports = function createAsk(deps) {
     if (!probe || !probe.hasInput) {
       const t = (probe && probe.text) || '';
       if (LOGIN_RE.test(t) || /login|signin|auth/i.test((probe && probe.url) || '')) return { ok: false, status: 'login', note: 'Not signed in' };
-      return { ok: false, status: 'failed', note: 'Could not find the message box' };
+      return { ok: false, status: 'failed', note: 'Could not find the message box on ' + (hostOf(probe && probe.url || '') || 'the page') + ' (open it once and check you are signed in)' };
     }
     if (LIMIT_RE.test(probe.text)) return { ok: false, status: 'limit', note: 'Limit reached' };
 
@@ -169,7 +175,7 @@ module.exports = function createAsk(deps) {
         emit('trying', 'Answer coming in from ' + svc.name + '...', last);
         if (stable >= 3) return { ok: true, status: 'done', text: last };
       } else if (Date.now() - started > 45000 && !r.stopping) {
-        return { ok: false, status: 'failed', note: 'No answer appeared' };
+        return { ok: false, status: 'failed', note: 'Question was sent but no answer could be read' };
       }
     }
     if (last) return { ok: true, status: 'done', text: last };

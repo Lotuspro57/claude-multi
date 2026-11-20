@@ -6,6 +6,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src https: data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'">
 <style>
   :root {
+    --rail-w:190px;
     --bg:#F4F2EE; --surface:#FFFFFF; --line:#E3DFD6; --text:#1D1C1A; --muted:#5E5A53;
     --rail:#24221F; --rail-text:#F4F2EE; --rail-hover:#34312D; --accent:#4338CA;
     --good:#15803D; --warn:#B45309; --hot:#B91C1C; --shadow:0 1px 2px rgba(0,0,0,.06),0 6px 20px rgba(0,0,0,.06);
@@ -21,7 +22,7 @@
   button:focus-visible,input:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
 
   /* ---- rail ---- */
-  #rail { position:fixed; left:0; top:0; bottom:0; width:212px; background:var(--rail); color:var(--rail-text); display:flex; flex-direction:column; align-items:stretch; padding:10px 8px; gap:4px; }
+  #rail { position:fixed; left:0; top:0; bottom:0; width:var(--rail-w); background:var(--rail); color:var(--rail-text); display:flex; flex-direction:column; align-items:stretch; padding:10px 8px; gap:4px; }
   #railApps { flex:1; width:100%; overflow-y:auto; display:flex; flex-direction:column; align-items:stretch; gap:4px; padding:2px 0; scrollbar-width:none; }
   .rbtn { position:relative; width:100%; height:44px; border-radius:12px; display:flex; align-items:center; gap:12px; padding:0 10px; text-align:left; transition:background .15s; }
   .rl { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:500; }
@@ -36,8 +37,23 @@
   .rdot { position:absolute; left:3px; top:3px; width:8px; height:8px; border-radius:50%; background:#22C55E; border:2px solid var(--rail); }
   .sep { width:100%; height:1px; background:var(--rail-hover); margin:2px 0; }
 
+  #grip { position:absolute; top:0; bottom:0; right:-4px; width:8px; cursor:col-resize; z-index:5; }
+  #grip:hover, #grip.drag { background:linear-gradient(90deg,transparent 3px,var(--accent) 3px,var(--accent) 5px,transparent 5px); }
+  body.mini .rl, body.mini .rx { display:none !important; }
+  body.mini #rail { padding:10px 6px; }
+  body.mini .rbtn { justify-content:center; padding:0; }
+  body.mini .rdot { left:6px; top:6px; }
+  body.mini .rbtn.split::after { right:4px; top:3px; }
+  #collapseBtn svg { transition:transform .2s; } body.mini #collapseBtn svg { transform:rotate(180deg); }
+  .abanner { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:18px; }
+  .abanner .by2 { font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); border:1px solid var(--line); padding:5px 12px; border-radius:999px; background:var(--surface); }
+  .qs { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+  .qs button { font-size:12px; padding:5px 12px; border-radius:999px; border:1px solid var(--line); background:var(--surface); color:var(--muted); }
+  .qs button:hover { color:var(--accent); border-color:var(--accent); }
+  .prog { margin-top:10px; font-size:13px; color:var(--muted); min-height:18px; }
+
   /* ---- toolbar ---- */
-  #bar { position:fixed; left:212px; right:0; top:0; height:60px; background:var(--surface); border-bottom:1px solid var(--line); display:none; align-items:center; gap:6px; padding:0 12px; }
+  #bar { position:fixed; left:var(--rail-w); right:0; top:0; height:60px; background:var(--surface); border-bottom:1px solid var(--line); display:none; align-items:center; gap:6px; padding:0 12px; }
   body.app #bar { display:flex; }
   .tb { width:36px; height:36px; border-radius:10px; display:grid; place-items:center; color:var(--text); }
   .tb:hover:not(:disabled) { background:var(--bg); }
@@ -57,7 +73,7 @@
   .pillbtn:hover { background:var(--bg); } .pillbtn.on { background:var(--bg); color:var(--accent); }
 
   /* ---- home ---- */
-  #home { position:fixed; left:212px; right:0; top:0; bottom:0; overflow-y:auto; padding:28px 36px 60px; display:none; }
+  #home { position:fixed; left:var(--rail-w); right:0; top:0; bottom:0; overflow-y:auto; padding:28px 36px 60px; display:none; }
   body.home #home { display:block; }
   .wrap { max-width:1060px; margin:0 auto; }
   .banner { border-radius:20px; padding:26px 30px; background:linear-gradient(120deg,var(--accent),#0F172A); color:#fff; display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; box-shadow:var(--shadow); }
@@ -94,7 +110,7 @@
   .rbtn:hover .rx { display:block; } .rx:hover { background:var(--hot); }
   .cx { position:absolute; right:10px; bottom:10px; font-size:12px; color:var(--muted); padding:2px 8px; border-radius:8px; }
   .cx:hover { background:var(--bg); color:var(--hot); }
-  #askPage,#histPage { position:fixed; left:212px; right:0; top:0; bottom:0; overflow-y:auto; padding:28px 36px 60px; display:none; }
+  #askPage,#histPage { position:fixed; left:var(--rail-w); right:0; top:0; bottom:0; overflow-y:auto; padding:28px 36px 60px; display:none; }
   body.home.p-ask #askPage, body.home.p-hist #histPage { display:block; }
   body.home.p-ask #home, body.home.p-hist #home { display:none; }
   .ph { margin:0 0 4px; font-size:24px; letter-spacing:-.01em; } .pp { margin:0 0 18px; color:var(--muted); }
@@ -153,12 +169,14 @@
 <body class="home">
 
 <nav id="rail">
-  <button class="rbtn" id="homeBtn" title="Home" aria-label="Home"><span class="ic"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg></span><span class="rl">Home</span></button>
+  <div id="grip" title="Drag to resize, double-click to shrink or expand"></div>
+  <button class="rbtn" id="askBtn" title="Ask any AI" aria-label="Ask any AI"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/></svg></span><span class="rl">Ask any AI</span></button>
+  <button class="rbtn" id="homeBtn" title="All apps" aria-label="All apps"><span class="ic"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg></span><span class="rl">All apps</span></button>
   <div class="sep"></div>
   <div id="railApps"></div>
-  <button class="rbtn" id="askBtn" title="Ask any AI" aria-label="Ask any AI"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/></svg></span><span class="rl">Ask any AI</span></button>
   <button class="rbtn" id="histBtn" title="Usage history" aria-label="Usage history"><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 20V4M4 20h16M8 15l4-4 3 3 5-6"/></svg></span><span class="rl">Usage history</span></button>
   <button class="rbtn" id="addBtn" title="Add an app" aria-label="Add an app"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><span class="rl">Add an app</span></button>
+  <button class="rbtn" id="collapseBtn" title="Shrink or expand this bar" aria-label="Shrink or expand"><span class="ic"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></span><span class="rl">Shrink</span></button>
   <button class="rbtn" id="setBtn" title="Look and feel" aria-label="Look and feel"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3.9a7 7 0 0 0-2-1.2L14.2 3h-4l-.4 2.6a7 7 0 0 0-2 1.2l-2.3-.9-2 3.4 2 1.5A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.4 2.3-.9a7 7 0 0 0 2 1.2l.4 2.6h4l.4-2.6a7 7 0 0 0 2-1.2l2.3.9 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z"/></svg></span><span class="rl">Look and feel</span></button>
 </nav>
 
@@ -193,8 +211,7 @@
 </main>
 
 <main id="askPage"><div class="wrap">
-  <h1 class="ph">Ask any AI</h1>
-  <p class="pp">Type a question once. The app picks the best signed-in AI for it and moves to the next one if a page is full or signed out.</p>
+  <div class="abanner"><div><h1 class="ph" style="margin:0">Ask any AI</h1><p class="pp" style="margin:4px 0 0">Type once. The best signed-in AI answers here, and the next one takes over if a page is full or signed out.</p></div><div class="by2">Designed by NURUZZAMAN</div></div>
   <div class="box">
     <textarea id="askText" placeholder="What would you like to ask or do?" spellcheck="true"></textarea>
     <div class="picks" id="picks"></div>
@@ -205,6 +222,7 @@
       <button class="btn pri" id="askGo">Ask</button>
     </div>
   </div>
+  <div class="prog" id="askProg"></div>
   <div class="steps" id="askSteps"></div>
   <div id="askAnswers"></div>
   <div class="note">Works through the pages you are already signed in to, so no extra cost. Gemini and NotebookLM open in your own browser, so they are not included. If a site changes its page, that one app may fail and the next is tried.</div>
@@ -261,8 +279,16 @@
   const svc = (id) => state.services.find((x) => x.id === id);
 
   /* ---------- theme ---------- */
+  let gripDrag = false;
   const mq = window.matchMedia('(prefers-color-scheme: dark)');
+  function setRailW(w) {
+    w = Math.max(60, Math.min(320, Math.round(w)));
+    document.documentElement.style.setProperty('--rail-w', w + 'px');
+    document.body.classList.toggle('mini', w <= 100);
+    return w;
+  }
   function applyTheme() {
+    if (state.prefs && state.prefs.railW && !gripDrag) setRailW(state.prefs.railW);
     const p = state.prefs || {};
     const t = p.theme === 'auto' ? (mq.matches ? 'dark' : 'light') : (p.theme || 'light');
     document.documentElement.setAttribute('data-theme', t);
@@ -446,7 +472,7 @@
   $('setBtn').onclick = openLook;
 
   /* ---------- pages: home / ask / history ---------- */
-  let page = 'home';
+  let page = 'ask';
   function setPage(p) {
     page = p;
     document.body.classList.remove('p-home', 'p-ask', 'p-hist');
@@ -478,7 +504,7 @@
   function startAsk() {
     const prompt = $('askText').value.trim(); if (!prompt) return;
     job = 'j' + Date.now(); answers = {};
-    $('askSteps').innerHTML = ''; $('askAnswers').innerHTML = '';
+    $('askSteps').innerHTML = ''; $('askAnswers').innerHTML = ''; $('askProg').textContent = 'Starting...';
     const ids = askMode === 'several' ? [...document.querySelectorAll('#picks input:checked')].map((i) => i.value) : [];
     if (askMode === 'several' && !ids.length) return;
     setRunning(true);
@@ -513,12 +539,13 @@
     if (u.job !== job) return;
     if (u.plan && u.kind) { const k = { code: 'a coding question', research: 'a research question', writing: 'a writing task', general: 'a general question' }[u.kind]; $('askSteps').dataset.kind = k; }
     if (u.id && u.status) {
+      $('askProg').textContent = u.status === 'trying' ? (u.note || '') : '';
       stepPill(u.id, u.name, u.status, u.note);
       if (u.text) answerCard(u.id, u.name, u.text);
     }
     if (u.none) { const n = el('div', 'note', 'None of the apps could answer right now. Check that you are signed in, or try again later.'); $('askAnswers').appendChild(n); }
     if (u.error) { $('askAnswers').appendChild(el('div', 'note', 'Something went wrong: ' + u.error)); }
-    if (u.finished) setRunning(false);
+    if (u.finished) { setRunning(false); $('askProg').textContent = ''; }
   });
 
   /* ---------- Usage history ---------- */
@@ -555,6 +582,30 @@
   $('histRefresh').onclick = () => { state.services.filter((s) => s.kind === 'claude').length && A.refreshUsage(); setTimeout(loadHistory, 1500); };
   $('histClear').onclick = () => { A.clearHistory(); loadHistory(); };
 
+  /* ---------- resizable / collapsible left bar ---------- */
+  const grip = $('grip');
+  grip.addEventListener('mousedown', (e) => {
+    e.preventDefault(); gripDrag = true; grip.classList.add('drag'); A.overlay(true);
+    let w = 0;
+    const move = (ev) => { w = setRailW(ev.clientX); };
+    const up = () => {
+      document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up);
+      gripDrag = false; grip.classList.remove('drag');
+      if (w) { if (w > 100) { try { localStorage.setItem('lastRailW', String(w)); } catch (x) {} } A.setPref({ railW: w }); }
+      A.overlay(false);
+    };
+    document.addEventListener('mousemove', move); document.addEventListener('mouseup', up);
+  });
+  function toggleRail() {
+    const cur = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--rail-w'), 10) || 190;
+    let next;
+    if (cur > 100) { try { localStorage.setItem('lastRailW', String(cur)); } catch (x) {} next = 64; }
+    else { let l = 190; try { l = parseInt(localStorage.getItem('lastRailW'), 10) || 190; } catch (x) {} next = Math.max(140, l); }
+    setRailW(next); A.setPref({ railW: next });
+  }
+  grip.addEventListener('dblclick', toggleRail);
+  $('collapseBtn').onclick = toggleRail;
+
   /* ---------- wiring ---------- */
   $('homeBtn').onclick = () => { setPage('home'); A.home(); };
   $('askBtn').onclick = () => { setPage('ask'); if (state.active !== null) A.home(); setTimeout(() => $('askText').focus(), 50); };
@@ -577,7 +628,7 @@
   });
   A.onState((s) => { state = s; render(); if (paletteOpen) fillPalette(); });
   A.onUsage((u) => { usage[u.id] = u; renderHome(); renderBar(); if (page === 'hist' && !u.loading) setTimeout(loadHistory, 300); });
-  setPage('home');
+  setPage('ask');
   render();
 </script>
 </body>

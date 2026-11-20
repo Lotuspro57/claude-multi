@@ -2,7 +2,6 @@ const { app, BaseWindow, WebContentsView, BrowserWindow, ipcMain, shell, Menu, s
 const path = require('path');
 const fs = require('fs');
 
-const RAIL_W = 212;      // left rail with Home and the open apps
 const TOOLBAR_H = 60;   // top toolbar shown while an app is open
 const USAGE_URL = 'https://claude.ai/settings/usage';
 const REFRESH_MS = 5 * 60 * 1000;
@@ -41,7 +40,8 @@ let focused = null;      // id of the service the user last clicked in (zoom tar
 let servicesFile, stateFile, prefsFile, historyFile;
 let history = {};        // service id -> [{ t, items: [{label, pct}] }]
 const lastUsage = {};    // service id -> latest usage items (used by the Ask tab to skip accounts that are nearly full)
-let prefs = { theme: 'auto', accent: '#4338CA' };
+let prefs = { theme: 'auto', accent: '#4338CA', railW: 190 };
+const askLive = new Set(); // views the Ask tab is driving: kept 'visible' off-screen so pages behave normally
 let overlayOpen = false; // search / edit window open: service pages are hidden so it can be seen
 let usageTimer = null;
 let stateTimer = null;
@@ -80,6 +80,7 @@ function loadServices() {
   const p = readJson(prefsFile, {});
   if (['light', 'dark', 'auto'].includes(p.theme)) prefs.theme = p.theme;
   if (/^#[0-9a-fA-F]{6}$/.test(p.accent || '')) prefs.accent = p.accent;
+  if (Number.isFinite(p.railW)) prefs.railW = Math.min(320, Math.max(60, Math.round(p.railW)));
   const data = readJson(servicesFile, null);
   if (Array.isArray(data)) {
     const clean = data.filter(validService);
@@ -189,6 +190,7 @@ function layout() {
   const { width, height } = win.getContentBounds();
   ui.setBounds({ x: 0, y: 0, width, height });
   const ids = overlayOpen ? [] : visibleIds();
+  const RAIL_W = prefs.railW || 190;
   const areaX = RAIL_W;
   const areaW = Math.max(0, width - RAIL_W);
   const bodyH = Math.max(0, height - TOOLBAR_H);
@@ -196,6 +198,11 @@ function layout() {
     const i = ids.indexOf(id);
     if (i === -1) {
       // keep a real size while hidden so pages still lay out (the Ask tab drives hidden pages)
+      if (askLive.has(id)) {
+        v.setBounds({ x: -8000, y: TOOLBAR_H, width: Math.max(900, areaW), height: bodyH });
+        v.setVisible(true);
+        continue;
+      }
       v.setBounds({ x: areaX, y: TOOLBAR_H, width: areaW, height: bodyH });
       v.setVisible(false);
       continue;
@@ -619,6 +626,7 @@ ipcMain.on('clear-history', () => { history = {}; writeJson(historyFile, history
 const askEngine = require('./ask.js')({
   getServices: () => services,
   ensureView: (id) => { const v = ensureView(id); layout(); pushState(); return v; },
+  live: (id, on) => { if (on) askLive.add(id); else askLive.delete(id); layout(); },
   getUsage: (id) => lastUsage[id],
   send: (channel, payload) => sendToUI(channel, payload)
 });
@@ -634,6 +642,7 @@ ipcMain.on('pref', (e, p) => {
   if (!p) return;
   if (['light', 'dark', 'auto'].includes(p.theme)) prefs.theme = p.theme;
   if (/^#[0-9a-fA-F]{6}$/.test(p.accent || '')) prefs.accent = p.accent;
+  if (Number.isFinite(p.railW)) { prefs.railW = Math.min(320, Math.max(60, Math.round(p.railW))); layout(); }
   writeJson(prefsFile, prefs);
   pushState();
 });
