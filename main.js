@@ -2,7 +2,7 @@ const { app, BaseWindow, WebContentsView, BrowserWindow, ipcMain, shell, Menu, s
 const path = require('path');
 const fs = require('fs');
 
-const RAIL_W = 76;      // left rail with Home and the open apps
+const RAIL_W = 212;      // left rail with Home and the open apps
 const TOOLBAR_H = 60;   // top toolbar shown while an app is open
 const USAGE_URL = 'https://claude.ai/settings/usage';
 const REFRESH_MS = 5 * 60 * 1000;
@@ -467,20 +467,50 @@ function fetchUsage(partition) {
         try {
           const url = hidden.webContents.getURL();
           if (/\/login|\/logout|\/onboarding/.test(url)) return finish({ error: 'Not logged in' });
+          // 1) ask claude.ai's own usage data (same thing its usage page shows), using this account's login
+          const api = await hidden.webContents.executeJavaScript(`(async () => {
+            try {
+              const r1 = await fetch('/api/organizations', { credentials: 'include' });
+              if (r1.status === 401 || r1.status === 403) return { auth: false };
+              const orgs = await r1.json();
+              if (!Array.isArray(orgs) || !orgs.length) return { auth: false };
+              const org = orgs.find((x) => (x.capabilities || []).includes('chat')) || orgs[0];
+              const r2 = await fetch('/api/organizations/' + org.uuid + '/usage', { credentials: 'include' });
+              if (!r2.ok) return { auth: true, status: r2.status };
+              return { auth: true, data: await r2.json() };
+            } catch (e) { return { err: String(e) }; }
+          })()`);
+          if (api && api.auth === false) return finish({ error: 'Not logged in' });
+          const items = [];
+          if (api && api.data && typeof api.data === 'object') {
+            const names = { five_hour: 'Session', seven_day: 'Weekly', seven_day_opus: 'Weekly Opus', seven_day_sonnet: 'Weekly Sonnet' };
+            for (const k of Object.keys(names)) {
+              const d = api.data[k];
+              if (d && typeof d.utilization === 'number') {
+                let text = '';
+                if (d.resets_at) {
+                  const mins = Math.max(0, Math.round((new Date(d.resets_at) - Date.now()) / 60000));
+                  text = 'Resets in ' + (mins >= 1440 ? Math.floor(mins / 1440) + 'd ' + Math.floor((mins % 1440) / 60) + 'h' : Math.floor(mins / 60) + 'h ' + (mins % 60) + 'm');
+                }
+                items.push({ label: names[k], pct: Math.max(0, Math.min(100, d.utilization)), text });
+              }
+            }
+          }
+          if (items.length) return finish({ items });
+          // 2) fallback: read the usage page, but only lines that say "x% used" so nothing unrelated is shown
           const text = await hidden.webContents.executeJavaScript('document.body.innerText');
           const lines = text.split('\n').map((s) => s.trim()).filter(Boolean);
-          const items = [];
           for (let k = 0; k < lines.length; k++) {
-            const m = lines[k].match(/(\d{1,3}(?:\.\d+)?)\s*%/);
+            const m = lines[k].match(/(\d{1,3}(?:\.\d+)?)\s*%\s*used/i);
             if (m) {
               let label = '';
-              for (let b = k - 1; b >= Math.max(0, k - 3); b--) {
-                if (!/%/.test(lines[b]) && lines[b].length < 60) { label = lines[b]; break; }
+              for (let b2 = k - 1; b2 >= Math.max(0, k - 3); b2--) {
+                if (!/%/.test(lines[b2]) && lines[b2].length < 60) { label = lines[b2]; break; }
               }
               items.push({ label: label || 'Usage', pct: Math.min(100, parseFloat(m[1])), text: lines[k] });
             }
           }
-          finish(items.length ? { items } : { error: 'No usage numbers found' });
+          finish(items.length ? { items } : { error: 'Could not read usage (open the account once and sign in)' });
         } catch (e) {
           finish({ error: String(e.message || e) });
         }

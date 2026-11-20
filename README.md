@@ -1,4 +1,4 @@
-# Multi AI (v1.4.0)
+# Multi AI (v1.4.1)
 
 New in 1.4.0: Ask any AI tab (best AI picked automatically, moves on when one is full or signed out), usage history charts, close buttons on open apps.
 

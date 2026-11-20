@@ -72,7 +72,7 @@ module.exports = function createAsk(deps) {
       const site = ${JSON.stringify(site)};
       const prompt = ${JSON.stringify(prompt)};
       const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-      const vis = (e) => e && e.offsetParent !== null && !e.disabled;
+      const vis = (e) => e && e.getClientRects().length > 0 && !e.disabled;
       const first = (list) => { for (const s of list) { const all = [...document.querySelectorAll(s)].filter(vis); if (all.length) return all[all.length - 1]; } return null; };
       const replies = () => { for (const s of site.reply) { const all = [...document.querySelectorAll(s)]; if (all.length) return all; } return []; };
       const bodyText = () => (document.body ? document.body.innerText : '');
@@ -115,9 +115,14 @@ module.exports = function createAsk(deps) {
       const text = bodyText();
       let reply = '';
       if (list.length > base.count) reply = (list[list.length - 1].innerText || '').trim();
-      else if (!site.reply.length || !list.length) {
+      if (!reply) {
+        // fallback for any page: whatever appeared after the question we typed
         const i = text.lastIndexOf(prompt.slice(0, 40));
-        if (i >= 0) reply = text.slice(i + prompt.length).trim();
+        if (i >= 0) {
+          let rest = text.slice(i + Math.min(prompt.length, 4000)).trim();
+          rest = rest.replace(/^(Copy|Edit|Share|Retry)\s*/i, '');
+          if (rest.length > 1) reply = rest.slice(0, 20000);
+        }
       }
       const limitNow = !base.limit && ${LIMIT_RE.toString()}.test(text);
       return { reply, stopping, limitNow, hasInput: !!first(site.input), len: text.length };
