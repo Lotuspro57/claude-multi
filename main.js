@@ -2,7 +2,8 @@ const { app, BaseWindow, WebContentsView, BrowserWindow, ipcMain, shell, Menu, s
 const path = require('path');
 const fs = require('fs');
 
-const TAB_H = 46;
+const RAIL_W = 76;      // left rail with Home and the open apps
+const TOOLBAR_H = 60;   // top toolbar shown while an app is open
 const USAGE_URL = 'https://claude.ai/settings/usage';
 const REFRESH_MS = 5 * 60 * 1000;
 const SHARED = 'persist:shared';
@@ -37,7 +38,11 @@ let order = [];          // ids of opened services, in the order they were opene
 let active = null;       // id of the main visible service, or null for the home screen
 let split = null;        // id of the service shown beside the main one (split screen), or null
 let focused = null;      // id of the service the user last clicked in (zoom target)
-let servicesFile, stateFile;
+let servicesFile, stateFile, prefsFile, historyFile;
+let history = {};        // service id -> [{ t, items: [{label, pct}] }]
+const lastUsage = {};    // service id -> latest usage items (used by the Ask tab to skip accounts that are nearly full)
+let prefs = { theme: 'auto', accent: '#4338CA' };
+let overlayOpen = false; // search / edit window open: service pages are hidden so it can be seen
 let usageTimer = null;
 let stateTimer = null;
 
@@ -68,6 +73,13 @@ function loadServices() {
   const dir = app.getPath('userData');
   servicesFile = path.join(dir, 'services.json');
   stateFile = path.join(dir, 'state.json');
+  prefsFile = path.join(dir, 'prefs.json');
+  historyFile = path.join(dir, 'history.json');
+  history = readJson(historyFile, {});
+  if (!history || typeof history !== 'object' || Array.isArray(history)) history = {};
+  const p = readJson(prefsFile, {});
+  if (['light', 'dark', 'auto'].includes(p.theme)) prefs.theme = p.theme;
+  if (/^#[0-9a-fA-F]{6}$/.test(p.accent || '')) prefs.accent = p.accent;
   const data = readJson(servicesFile, null);
   if (Array.isArray(data)) {
     const clean = data.filter(validService);
@@ -158,7 +170,10 @@ function navigate(id, dir) {
 function pushState() {
   if (!uiReady || !ui || ui.webContents.isDestroyed()) return;
   const target = focusId();
-  ui.webContents.send('state', { services, order, active, split, target, nav: navState(target) });
+  let url = '';
+  const tv = target && views.get(target);
+  if (tv && !tv.webContents.isDestroyed()) url = tv.webContents.getURL();
+  ui.webContents.send('state', { services, order, active, split, target, nav: navState(target), url, prefs });
 }
 function sendToUI(channel, payload) {
   if (!uiReady || !ui || ui.webContents.isDestroyed()) return;
@@ -169,29 +184,32 @@ function sendToUI(channel, payload) {
 
 function layout() {
   if (!win || win.isDestroyed()) return;
+  // The interface fills the whole window underneath (rail, toolbar, home screen);
+  // service pages sit on top of its content area.
   const { width, height } = win.getContentBounds();
-  if (active === null) {
-    ui.setBounds({ x: 0, y: 0, width, height });
-  } else {
-    ui.setBounds({ x: 0, y: 0, width, height: TAB_H });
-  }
-  const ids = visibleIds();
-  const bodyH = Math.max(0, height - TAB_H);
+  ui.setBounds({ x: 0, y: 0, width, height });
+  const ids = overlayOpen ? [] : visibleIds();
+  const areaX = RAIL_W;
+  const areaW = Math.max(0, width - RAIL_W);
+  const bodyH = Math.max(0, height - TOOLBAR_H);
   for (const [id, v] of views) {
     const i = ids.indexOf(id);
-    if (i === -1) { v.setVisible(false); continue; }
+    if (i === -1) {
+      // keep a real size while hidden so pages still lay out (the Ask tab drives hidden pages)
+      v.setBounds({ x: areaX, y: TOOLBAR_H, width: areaW, height: bodyH });
+      v.setVisible(false);
+      continue;
+    }
     v.setVisible(true);
     if (ids.length === 1) {
-      v.setBounds({ x: 0, y: TAB_H, width, height: bodyH });
+      v.setBounds({ x: areaX, y: TOOLBAR_H, width: areaW, height: bodyH });
     } else {
-      const half = Math.floor(width / 2);
-      const x = i === 0 ? 0 : half + 1;
-      const w = i === 0 ? half - 1 : width - half - 1;
-      v.setBounds({ x, y: TAB_H, width: Math.max(0, w), height: bodyH });
+      const half = Math.floor(areaW / 2);
+      const x = i === 0 ? areaX : areaX + half + 1;
+      const w = i === 0 ? half - 1 : areaW - half - 1;
+      v.setBounds({ x, y: TOOLBAR_H, width: Math.max(0, w), height: bodyH });
     }
   }
-  // keep the top bar above every service view
-  win.contentView.addChildView(ui);
 }
 
 // ---------- zoom ----------
@@ -215,7 +233,7 @@ function changeZoom(id, dir) {
 // ---------- service views ----------
 
 function createView(s) {
-  const viewPrefs = { partition: s.partition, preload: path.join(__dirname, 'webauthn-off.js') };
+  const viewPrefs = { partition: s.partition, preload: path.join(__dirname, 'webauthn-off.js'), backgroundThrottling: false };
   const v = new WebContentsView({ webPreferences: viewPrefs });
   const wc = v.webContents;
   wc.setUserAgent(UA);
@@ -251,6 +269,7 @@ function createView(s) {
       return;
     }
     if (input.type !== 'keyDown' || !(input.control || input.meta) || input.alt) return;
+    if (String(input.key).toLowerCase() === 'k') { e.preventDefault(); sendToUI('palette'); return; } // Ctrl K = search
     if (input.key === '=' || input.key === '+') { e.preventDefault(); changeZoom(s.id, 'in'); }
     else if (input.key === '-' || input.key === '_') { e.preventDefault(); changeZoom(s.id, 'out'); }
     else if (input.key === '0') { e.preventDefault(); changeZoom(s.id, 'reset'); }
@@ -482,6 +501,13 @@ async function refreshUsage(onlyId) {
       sendToUI('usage', { id: s.id, loading: true });
       const r = await fetchUsage(s.partition);
       sendToUI('usage', { id: s.id, ts: Date.now(), ...r });
+      if (r && r.items && r.items.length) {
+        lastUsage[s.id] = r.items;
+        const list = history[s.id] = history[s.id] || [];
+        list.push({ t: Date.now(), items: r.items.map((it) => ({ label: it.label, pct: it.pct })) });
+        if (list.length > 800) list.splice(0, list.length - 800);
+        writeJson(historyFile, history);
+      }
     }
   } finally {
     usageBusy = false;
@@ -556,7 +582,38 @@ ipcMain.on('reload-active', () => {
   if (id && views.get(id)) views.get(id).webContents.reload();
 });
 ipcMain.on('refresh-usage', (e, id) => refreshUsage(id));
+ipcMain.handle('get-history', () => history);
+ipcMain.on('clear-history', () => { history = {}; writeJson(historyFile, history); });
+
+// ---------- Ask tab (sends a question to the best signed-in AI, moves on when one is full) ----------
+const askEngine = require('./ask.js')({
+  getServices: () => services,
+  ensureView: (id) => { const v = ensureView(id); layout(); pushState(); return v; },
+  getUsage: (id) => lastUsage[id],
+  send: (channel, payload) => sendToUI(channel, payload)
+});
+ipcMain.on('ask', (e, req) => askEngine.start(req));
+ipcMain.on('ask-cancel', (e, job) => askEngine.cancel(job));
+ipcMain.on('ask-show', (e, id) => { const s = find(id); if (s && !s.external) openService(id); });
 ipcMain.on('nav', (e, dir) => navigate(focusId(), dir));
+
+// search / edit windows draw over the page area, so the service pages are hidden while they are open
+ipcMain.on('overlay', (e, open) => { overlayOpen = !!open; layout(); });
+
+ipcMain.on('pref', (e, p) => {
+  if (!p) return;
+  if (['light', 'dark', 'auto'].includes(p.theme)) prefs.theme = p.theme;
+  if (/^#[0-9a-fA-F]{6}$/.test(p.accent || '')) prefs.accent = p.accent;
+  writeJson(prefsFile, prefs);
+  pushState();
+});
+
+ipcMain.on('open-external', () => {
+  const id = focusId();
+  const v = id && views.get(id);
+  const url = v && !v.webContents.isDestroyed() ? v.webContents.getURL() : (find(id) || {}).url;
+  if (/^https?:/i.test(url || '')) shell.openExternal(url);
+});
 
 ipcMain.on('zoom', (e, dir) => {
   const id = focusId();

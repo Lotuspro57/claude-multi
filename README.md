@@ -1,3 +1,10 @@
+# Multi AI (v1.4.0)
+
+New in 1.4.0: Ask any AI tab (best AI picked automatically, moves on when one is full or signed out), usage history charts, close buttons on open apps.
+
+New in 1.3.0: redesigned interface - left rail of open apps, top toolbar (back, forward, reload, zoom, split, open in browser),
+new Home screen, Ctrl K quick search, light/dark theme and accent colours (gear button, bottom left).
+
 # Multi AI
 
 One app, one home screen of icons: Claude 1 to 4, ChatGPT, Gemini, Grok, DeepSeek, Perplexity, Copilot, NotebookLM, Mistral, plus anything you add.
