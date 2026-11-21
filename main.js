@@ -37,8 +37,7 @@ let order = [];          // ids of opened services, in the order they were opene
 let active = null;       // id of the main visible service, or null for the home screen
 let split = null;        // id of the service shown beside the main one (split screen), or null
 let focused = null;      // id of the service the user last clicked in (zoom target)
-let servicesFile, stateFile, prefsFile, historyFile;
-let history = {};        // service id -> [{ t, items: [{label, pct}] }]
+let servicesFile, stateFile, prefsFile;
 const lastUsage = {};    // service id -> latest usage items (used by the Ask tab to skip accounts that are nearly full)
 let prefs = { theme: 'auto', accent: '#4338CA', railW: 190 };
 const askLive = new Set(); // views the Ask tab is driving: kept 'visible' off-screen so pages behave normally
@@ -74,9 +73,6 @@ function loadServices() {
   servicesFile = path.join(dir, 'services.json');
   stateFile = path.join(dir, 'state.json');
   prefsFile = path.join(dir, 'prefs.json');
-  historyFile = path.join(dir, 'history.json');
-  history = readJson(historyFile, {});
-  if (!history || typeof history !== 'object' || Array.isArray(history)) history = {};
   const p = readJson(prefsFile, {});
   if (['light', 'dark', 'auto'].includes(p.theme)) prefs.theme = p.theme;
   if (/^#[0-9a-fA-F]{6}$/.test(p.accent || '')) prefs.accent = p.accent;
@@ -540,10 +536,6 @@ async function refreshUsage(onlyId) {
       sendToUI('usage', { id: s.id, ts: Date.now(), ...r });
       if (r && r.items && r.items.length) {
         lastUsage[s.id] = r.items;
-        const list = history[s.id] = history[s.id] || [];
-        list.push({ t: Date.now(), items: r.items.map((it) => ({ label: it.label, pct: it.pct })) });
-        if (list.length > 800) list.splice(0, list.length - 800);
-        writeJson(historyFile, history);
       }
     }
   } finally {
@@ -619,33 +611,6 @@ ipcMain.on('reload-active', () => {
   if (id && views.get(id)) views.get(id).webContents.reload();
 });
 ipcMain.on('refresh-usage', (e, id) => refreshUsage(id));
-ipcMain.handle('get-history', () => history);
-ipcMain.on('clear-history', () => { history = {}; writeJson(historyFile, history); });
-
-// ---------- Universal Search (asks the AI companies directly with the user's own API keys) ----------
-const { safeStorage } = require('electron');
-let apiEngine = null;
-function engine() {
-  if (!apiEngine) {
-    apiEngine = require('./api.js')({
-      dir: path.dirname(prefsFile), readJson, writeJson, safeStorage,
-      send: (channel, payload) => sendToUI(channel, payload)
-    });
-  }
-  return apiEngine;
-}
-ipcMain.handle('keys-list', () => engine().listAll());
-ipcMain.handle('key-add', (e, req) => engine().addKey(req || {}));
-ipcMain.on('key-update', (e, req) => engine().updateKey(req || {}));
-ipcMain.on('key-remove', (e, id) => engine().removeKey(String(id)));
-ipcMain.on('settings-set', (e, s) => engine().setSettings(s || {}));
-ipcMain.handle('search-start', (e, req) => engine().start(req || {}));
-ipcMain.on('search-resume', (e, id, opts) => engine().resume(String(id), opts || {}));
-ipcMain.on('search-cancel', (e, id) => engine().cancel(String(id)));
-ipcMain.handle('jobs-list', () => engine().listJobs());
-ipcMain.handle('job-get', (e, id) => engine().getJob(String(id)));
-ipcMain.on('job-delete', (e, id) => engine().deleteJob(String(id)));
-app.on('before-quit', () => { try { if (apiEngine) apiEngine.flush(); } catch (e) {} });
 ipcMain.on('nav', (e, dir) => navigate(focusId(), dir));
 
 // search / edit windows draw over the page area, so the service pages are hidden while they are open

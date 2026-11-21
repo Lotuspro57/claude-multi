@@ -33,21 +33,6 @@ contextBridge.exposeInMainWorld('api', {
   overlay: (open) => ipcRenderer.send('overlay', !!open),
 
   // services and usage
-  getHistory: () => ipcRenderer.invoke('get-history'),
-  clearHistory: () => ipcRenderer.send('clear-history'),
-  // Universal Search (API keys)
-  keysList: () => ipcRenderer.invoke('keys-list'),
-  keyAdd: (req) => ipcRenderer.invoke('key-add', req),
-  keyUpdate: (req) => ipcRenderer.send('key-update', req),
-  keyRemove: (id) => ipcRenderer.send('key-remove', id),
-  settingsSet: (s) => ipcRenderer.send('settings-set', s),
-  searchStart: (req) => ipcRenderer.invoke('search-start', req),
-  searchResume: (id, opts) => ipcRenderer.send('search-resume', id, opts || {}),
-  searchCancel: (id) => ipcRenderer.send('search-cancel', id),
-  jobsList: () => ipcRenderer.invoke('jobs-list'),
-  jobGet: (id) => ipcRenderer.invoke('job-get', id),
-  jobDelete: (id) => ipcRenderer.send('job-delete', id),
-  onSearchUpdate: (cb) => ipcRenderer.on('search-update', (e, d) => cb(d)),
   refreshUsage: (id) => ipcRenderer.send('refresh-usage', id),
   saveService: (d) => ipcRenderer.send('save-service', d),
   deleteService: (id) => ipcRenderer.send('delete-service', id)

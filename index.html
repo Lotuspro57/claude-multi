@@ -202,12 +202,9 @@
 
 <nav id="rail">
   <div id="grip" title="Drag to resize, double-click to shrink or expand"></div>
-  <button class="rbtn" id="askBtn" title="Universal Search" aria-label="Universal Search"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/></svg></span><span class="rl">Universal Search</span></button>
   <button class="rbtn" id="homeBtn" title="All apps" aria-label="All apps"><span class="ic"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg></span><span class="rl">All apps</span></button>
   <div class="sep"></div>
   <div id="railApps"></div>
-  <button class="rbtn" id="keysBtn" title="API keys" aria-label="API keys"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3M14 9l2 2"/></svg></span><span class="rl">API keys</span></button>
-  <button class="rbtn" id="histBtn" title="Usage history" aria-label="Usage history"><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 20V4M4 20h16M8 15l4-4 3 3 5-6"/></svg></span><span class="rl">Usage history</span></button>
   <button class="rbtn" id="addBtn" title="Add an app" aria-label="Add an app"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><span class="rl">Add an app</span></button>
   <button class="rbtn" id="collapseBtn" title="Shrink or expand this bar" aria-label="Shrink or expand"><span class="ic"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></span><span class="rl">Shrink</span></button>
   <button class="rbtn" id="setBtn" title="Look and feel" aria-label="Look and feel"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3.9a7 7 0 0 0-2-1.2L14.2 3h-4l-.4 2.6a7 7 0 0 0-2 1.2l-2.3-.9-2 3.4 2 1.5A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.4 2.3-.9a7 7 0 0 0 2 1.2l.4 2.6h4l.4-2.6a7 7 0 0 0 2-1.2l2.3.9 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z"/></svg></span><span class="rl">Look and feel</span></button>
@@ -242,73 +239,6 @@
     <div class="hint">Tip: right-click any app for more options &middot; Ctrl K to search &middot; Alt+Left for Back</div>
   </div>
 </main>
-
-<main id="askPage"><div class="wrap">
-  <div class="abanner"><div><h1 class="ph" style="margin:0">Universal Search</h1><p class="pp" style="margin:4px 0 0">One question, every AI. Powered by your own API keys. If a key runs out, your job waits and carries on after you add a new one.</p></div><div class="by2">Designed by NURUZZAMAN</div></div>
-  <div class="box">
-    <textarea id="askText" placeholder="Ask anything or give a command..." spellcheck="true"></textarea>
-    <div class="askbar">
-      <div class="seg" id="askMode"><button data-m="best" class="on" title="One AI answers, the best one for this question">Best answer</button><button data-m="compare" title="Several AIs answer side by side">Compare all</button><button data-m="synthesize" title="Several AIs answer, then one merges them into the best answer">Combine</button></div>
-      <span class="sp"></span>
-      <span class="umsg" id="spendLine"></span>
-      <button class="btn" id="askStop" style="display:none">Stop</button>
-      <button class="btn pri" id="askGo">Search</button>
-    </div>
-  </div>
-  <div class="kchips" id="keyChips"></div>
-  <div class="box" id="noKeys" style="display:none;margin-top:12px"><b>No working API key yet.</b> <span class="umsg">Add a key for any AI company (Claude, ChatGPT, Gemini, Grok, DeepSeek, Mistral, Perplexity) to start.</span> <button class="btn pri" id="noKeysBtn" style="margin-left:10px">Add a key</button></div>
-  <div class="prog" id="askProg"></div>
-  <div class="steps" id="askSteps"></div>
-  <div id="askAnswers"></div>
-  <div class="note" id="askStats"></div>
-  <h2>Recent searches</h2>
-  <div class="box" id="recent" style="padding:6px"></div>
-  <div class="note">Keys stay on this PC and are only sent to the company they belong to. Costs shown are estimates from published prices. Answers arrive when complete, not word by word.</div>
-</div></main>
-
-<main id="keysPage"><div class="wrap">
-  <div class="abanner"><div><h1 class="ph" style="margin:0">API keys</h1><p class="pp" style="margin:4px 0 0">Add keys, set budgets, choose who answers first. <span id="keysSpend"></span></p></div><button class="btn pri" id="addKeyBtn">+ Add key</button></div>
-  <div class="box" style="padding:0;overflow:hidden" id="keyRows"></div>
-  <div class="hgrid" style="margin-top:16px">
-    <div class="box"><div class="lbl" style="margin-bottom:10px">Who answers first</div><div id="orderList"></div><label class="chk"><input type="checkbox" id="smartChk"> Smart routing: pick the best AI for coding, research or writing questions</label></div>
-    <div class="box"><div class="lbl" style="margin-bottom:10px">Safety</div><label class="chk">Daily spending cap in US dollars (0 = none) <input type="text" id="capInput" style="width:70px;margin-left:8px;height:32px;border:1px solid var(--line);border-radius:8px;padding:0 8px;background:var(--bg);color:var(--text);user-select:text"></label><div class="umsg" style="margin-top:8px">When the cap is reached, a search pauses and asks before spending more. You can also give each key its own monthly budget.</div></div>
-  </div>
-</div></main>
-
-<main id="histPage"><div class="wrap">
-  <h1 class="ph">Usage history</h1>
-  <p class="pp">How much of each Claude account's limit was used, recorded every time usage is refreshed.</p>
-  <div class="mact" style="margin:0 0 14px"><button class="btn" id="histRefresh">Refresh now</button><button class="btn dng" id="histClear">Clear history</button></div>
-  <div class="hgrid" id="histGrid"></div>
-</div></main>
-
-<div class="veil" id="pause"><div class="mbox" style="width:min(600px,94vw)">
-  <h3 id="pTitle">A key has run out</h3>
-  <div class="umsg" id="pText" style="margin-bottom:10px"></div>
-  <div class="lbl" style="margin:8px 0 4px">Where your job stands</div>
-  <div class="steplist" id="pSteps"></div>
-  <div id="pKeyRow">
-    <div class="lbl" style="margin:14px 0 6px">Paste a new key to continue from where it stopped</div>
-    <div style="display:flex;gap:8px"><select id="pProv" class="sel"></select><input type="text" id="pKey" placeholder="Paste the new key" autocomplete="off" spellcheck="false" style="flex:1;height:40px;border:1px solid var(--accent);border-radius:10px;padding:0 12px;background:var(--bg);color:var(--text);font-family:Consolas,monospace;user-select:text"><button class="btn pri" id="pResume">Resume</button></div>
-    <div class="umsg" id="pErr" style="margin-top:6px;color:var(--hot)"></div>
-  </div>
-  <div id="pCap" style="display:none"><div class="mact" style="margin-top:10px"><button class="btn pri" id="pAllow">Allow this search to continue</button><button class="btn" id="pCapGo">Change the cap</button></div></div>
-  <div class="mact" style="flex-wrap:wrap"><button class="btn" id="pRetry">Try again</button><button class="btn" id="pSkip"></button><span class="sp"></span><button class="btn" id="pLater">Wait, remind me later</button><button class="btn dng" id="pCancel">Cancel job</button></div>
-</div></div>
-
-<div class="veil" id="keymodal"><div class="mbox">
-  <h3>Add an API key</h3>
-  <label class="f" for="kmProv">Company</label><select id="kmProv" class="sel" style="width:100%"></select>
-  <div class="umsg" id="kmHelp" style="margin-top:4px"></div>
-  <label class="f" for="kmKey">Key</label><input type="text" id="kmKey" autocomplete="off" spellcheck="false" style="font-family:Consolas,monospace">
-  <label class="f" for="kmLabel">Name (optional)</label><input type="text" id="kmLabel" placeholder="for example: Personal or Backup">
-  <label class="f" for="kmModel">Model (optional)</label><input type="text" id="kmModel">
-  <label class="f" for="kmBudget">Monthly budget in US dollars (optional)</label><input type="text" id="kmBudget" placeholder="0 = no limit">
-  <div class="umsg" id="kmErr" style="margin-top:8px;color:var(--hot)"></div>
-  <div class="mact"><span class="sp"></span><button class="btn" id="kmCancel">Cancel</button><button class="btn pri" id="kmSave">Check and save</button></div>
-</div></div>
-
-<div class="veil" id="valmodal"><div class="mbox" style="width:min(380px,92vw)"><h3 id="vTitle"></h3><input type="text" id="vInput"><div class="mact"><span class="sp"></span><button class="btn" id="vCancel">Cancel</button><button class="btn pri" id="vOk">OK</button></div></div></div>
 
 <div class="veil" id="palette"><div class="pbox"><input id="pin" placeholder="Open an app&hellip;" autocomplete="off" spellcheck="false"><div id="plist"></div></div></div>
 
@@ -547,310 +477,13 @@
   $('setBtn').onclick = openLook;
 
   /* ---------- pages: home / ask / history ---------- */
-  let page = 'ask';
+  let page = 'home';
   function setPage(p) {
     page = p;
-    document.body.classList.remove('p-home', 'p-ask', 'p-hist', 'p-keys');
+    document.body.classList.remove('p-home');
     document.body.classList.add('p-' + p);
     $('homeBtn').classList.toggle('on', p === 'home' && state.active === null);
-    $('askBtn').classList.toggle('on', p === 'ask' && state.active === null);
-    $('histBtn').classList.toggle('on', p === 'hist' && state.active === null);
-    $('keysBtn').classList.toggle('on', p === 'keys' && state.active === null);
-    if (p === 'ask') refreshSearch();
-    if (p === 'keys') loadKeys();
   }
-
-  /* ---------- Universal Search (API keys) ---------- */
-  let kdata = { providers: [], keys: [], settings: { dailyCap: 2, smart: true, order: [], daySpent: 0 } };
-  let askMode = 'best', jobSnap = null, pendingPrompt = null, dismissedPause = null, pausedCount = 0;
-  const pname = (id) => (kdata.providers.find((p) => p.id === id) || { name: id }).name;
-  const pcolor = (id) => (kdata.providers.find((p) => p.id === id) || { color: '#555' }).color;
-  const money = (n) => '$' + (n < 0.01 && n > 0 ? n.toFixed(4) : n.toFixed(2));
-
-  async function loadKeys() { try { kdata = await A.keysList(); } catch (e) {} renderChips(); renderKeys(); }
-  async function refreshSearch() { await loadKeys(); loadRecent(); }
-
-  // safe, tiny text formatter: paragraphs, **bold**, bullets, ``` code ```
-  function fmtInline(parent, line) {
-    line.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).forEach((part) => {
-      if (/^\*\*[^*]+\*\*$/.test(part)) parent.appendChild(el('b', '', part.slice(2, -2)));
-      else if (/^`[^`]+`$/.test(part)) { const c = el('code', '', part.slice(1, -1)); c.style.cssText = 'background:var(--bg);padding:1px 5px;border-radius:5px'; parent.appendChild(c); }
-      else if (part) parent.appendChild(document.createTextNode(part));
-    });
-  }
-  function renderText(box, text) {
-    box.innerHTML = '';
-    String(text || '').split(/```/).forEach((seg, i) => {
-      if (i % 2 === 1) { const pre = el('pre', 'code'); pre.textContent = seg.replace(/^[a-zA-Z0-9+#-]*\n/, '').replace(/\n$/, ''); box.appendChild(pre); return; }
-      seg.split(/\n{2,}/).forEach((para) => {
-        if (!para.trim()) return;
-        const lines = para.split('\n');
-        if (lines.every((l) => /^\s*([-*]|\d+\.)\s+/.test(l))) {
-          const ul = el('ul'); lines.forEach((l) => { const li = el('li'); fmtInline(li, l.replace(/^\s*([-*]|\d+\.)\s+/, '')); ul.appendChild(li); }); box.appendChild(ul);
-        } else {
-          const p = el('p'); lines.forEach((l, k) => { if (k) p.appendChild(document.createElement('br')); fmtInline(p, l.replace(/^#{1,4}\s*/, '')); }); box.appendChild(p);
-        }
-      });
-    });
-  }
-
-  /* provider chips */
-  function chipState(pid) {
-    const ks = kdata.keys.filter((k) => k.provider === pid && k.enabled);
-    if (!ks.length) return { cls: 'none', text: 'no key' };
-    const okk = ks.filter((k) => k.status === 'ok' && !(k.budget > 0 && k.spent >= k.budget));
-    if (!okk.length) return { cls: 'bad', text: ks.some((k) => k.status === 'invalid') ? 'key rejected' : 'limit reached' };
-    const near = okk.some((k) => k.budget > 0 && k.spent / k.budget >= 0.8);
-    return { cls: near ? 'warn' : 'ok', text: near ? 'near budget' : 'key ok' };
-  }
-  function renderChips() {
-    const box = $('keyChips'); if (!box) return; box.innerHTML = '';
-    kdata.providers.forEach((p) => {
-      const s = chipState(p.id);
-      const c = el('button', 'kchip ' + s.cls); const i = el('i'); i.style.background = s.cls === 'ok' ? 'var(--good)' : s.cls === 'warn' ? 'var(--warn)' : s.cls === 'bad' ? 'var(--hot)' : 'var(--line)';
-      c.appendChild(i); c.appendChild(document.createTextNode(p.name + ' · ' + s.text));
-      c.onclick = () => (s.cls === 'none' ? openKeyModal(p.id) : (setPage('keys'), loadKeys()));
-      box.appendChild(c);
-    });
-    const any = kdata.keys.some((k) => k.enabled && k.status === 'ok');
-    $('noKeys').style.display = any ? 'none' : '';
-    $('spendLine').textContent = 'Spent today ' + money(kdata.settings.daySpent || 0) + (kdata.settings.dailyCap > 0 ? ' of your ' + money(kdata.settings.dailyCap) + ' daily cap' : '');
-  }
-
-  /* modes + start */
-  document.querySelectorAll('#askMode button').forEach((b) => b.onclick = () => {
-    askMode = b.dataset.m;
-    document.querySelectorAll('#askMode button').forEach((x) => x.classList.toggle('on', x === b));
-  });
-  function setRunning(on) { $('askGo').style.display = on ? 'none' : ''; $('askStop').style.display = on ? '' : 'none'; }
-  async function startSearch(mode) {
-    const prompt = $('askText').value.trim(); if (!prompt) return;
-    jobSnap = null; dismissedPause = null; pendingPrompt = prompt;
-    $('askAnswers').innerHTML = ''; $('askSteps').innerHTML = ''; $('askProg').textContent = 'Starting...';
-    setRunning(true);
-    try { await A.searchStart({ prompt, mode: mode || askMode }); } catch (e) { $('askProg').textContent = 'Could not start: ' + e.message; setRunning(false); }
-  }
-  $('askGo').onclick = () => startSearch();
-  $('askStop').onclick = () => { if (jobSnap) A.searchCancel(jobSnap.id); setRunning(false); };
-  $('askText').addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); startSearch(); } });
-
-  /* showing a job */
-  const STEP_ICON = { done: '✓', failed: '!', running: '…', pending: '·' };
-  function renderJob(j) {
-    jobSnap = j;
-    const running = j.status === 'running';
-    setRunning(running);
-    const steps = $('askSteps'); steps.innerHTML = '';
-    j.steps.forEach((s) => {
-      const p = el('span', 'st ' + (s.status === 'done' ? 'done' : s.status === 'failed' ? 'failed' : s.status === 'running' ? 'trying' : ''));
-      const who = s.usedProvider ? ' · ' + pname(s.usedProvider) : (s.trying && s.status === 'running' ? ' · ' + pname(s.trying) : '');
-      p.textContent = STEP_ICON[s.status] + ' ' + s.label + who;
-      steps.appendChild(p);
-    });
-    $('askProg').textContent = running ? 'Working...' : j.status === 'paused' ? 'Paused: waiting for you' : j.status === 'cancelled' ? 'Stopped' : '';
-    const box = $('askAnswers'); box.innerHTML = '';
-    const answers = j.final && j.final.answers || [];
-    answers.forEach((a) => {
-      const c = el('div', 'box ans');
-      const h = el('h3'); const d = el('span', 'dot'); d.style.background = pcolor(a.provider); d.textContent = pname(a.provider).charAt(0); h.appendChild(d);
-      h.appendChild(el('span', '', (j.mode === 'synthesize' ? 'Combined answer' : 'Answer') + ' from ' + pname(a.provider)));
-      h.appendChild(el('span', 'meta', (a.tin + a.tout).toLocaleString() + ' tokens · about ' + money(a.cost || 0) + ' · ' + ((a.ms || 0) / 1000).toFixed(1) + ' s'));
-      c.appendChild(h);
-      const body = el('div', 'md'); renderText(body, a.text); c.appendChild(body);
-      const acts = el('div', 'acts');
-      const cp = el('button', 'smallbtn', 'Copy'); cp.onclick = () => { navigator.clipboard.writeText(a.text).catch(() => {}); cp.textContent = 'Copied'; }; acts.appendChild(cp);
-      if (j.mode === 'best') { const cm = el('button', 'smallbtn', 'Compare with other AIs'); cm.onclick = () => startSearch('compare'); acts.appendChild(cm); }
-      c.appendChild(acts); box.appendChild(c);
-    });
-    if (j.mode === 'synthesize') {
-      const parts = j.steps.filter((s) => s.phase === 1 && s.status === 'done');
-      if (parts.length) { const d = el('details', 'box ans'); d.appendChild(el('summary', '', 'Show the ' + parts.length + ' answers it was built from'));
-        parts.forEach((s) => { d.appendChild(el('h3', '', pname(s.usedProvider))); const m = el('div', 'md'); renderText(m, s.out); d.appendChild(m); }); box.appendChild(d); }
-    }
-    // how it was answered
-    const trail = []; j.steps.forEach((s) => (s.trail || []).forEach((t) => trail.push(t)));
-    if (trail.length) {
-      const c = el('div', 'box ans'); c.appendChild(el('h3', '', 'How this was answered'));
-      trail.forEach((t) => { const r = el('div', 'trow'); r.appendChild(el('span', t.result === 'ok' ? 'ok' : 'bad', t.result === 'ok' ? '●' : '●'));
-        r.appendChild(document.createTextNode(' ' + pname(t.provider) + ' (' + (t.key || 'key') + '): ' + (t.result === 'ok' ? 'answered' : t.result === 'limit' ? 'out of credit, moved on' : t.result === 'invalid' ? 'key rejected, moved on' : t.result === 'rate' ? 'busy' : 'problem') + (t.note && t.result !== 'ok' ? ' — ' + t.note : ''))); c.appendChild(r); });
-      box.appendChild(c);
-    }
-    if (j.status === 'done' && j.needs && j.needs.reason === 'partial') box.appendChild(el('div', 'note', j.needs.text + ' You can add or replace a key in API keys.'));
-    $('askStats').textContent = j.spent ? 'This search cost about ' + money(j.spent) : '';
-    if (j.status === 'paused' && dismissedPause !== j.id) openPause(j); else if (j.status !== 'paused') closePause();
-  }
-  A.onSearchUpdate((j) => {
-    if (!jobSnap && pendingPrompt !== null && j.prompt === pendingPrompt) { jobSnap = j; }
-    if (jobSnap && j.id === jobSnap.id) renderJob(j);
-    if (j.status !== 'running') { loadRecent(); loadKeys(); }
-    updateBadge();
-  });
-
-  /* paused job (out of key) */
-  function openPause(j) {
-    const n = j.needs || {};
-    $('pTitle').textContent = n.reason === 'cap' ? 'Daily spending cap reached' : n.reason === 'nokey' ? 'Add an API key to begin' : 'A key has run out';
-    $('pText').textContent = n.text || '';
-    const sl = $('pSteps'); sl.innerHTML = '';
-    j.steps.forEach((s) => { const r = el('div', 'step'); const b = el('b', '', STEP_ICON[s.status] || '·'); b.className = 'sb ' + s.status; r.appendChild(b); r.appendChild(el('div', '', s.label + (s.usedProvider ? ' · ' + pname(s.usedProvider) : '') + (s.status === 'failed' ? ' · stopped' : ''))); sl.appendChild(r); });
-    const sel = $('pProv'); sel.innerHTML = '';
-    const need = (n.providers && n.providers.length) ? n.providers : kdata.providers.map((p) => p.id);
-    need.forEach((id) => { const o = el('option', '', pname(id)); o.value = id; sel.appendChild(o); });
-    $('pKeyRow').style.display = n.reason === 'cap' ? 'none' : '';
-    $('pCap').style.display = n.reason === 'cap' ? '' : 'none';
-    $('pErr').textContent = ''; $('pKey').value = '';
-    const sk = $('pSkip'); sk.style.display = (n.providers && n.providers.length) ? '' : 'none';
-    sk.textContent = n.providers && n.providers.length ? 'Continue without ' + n.providers.map(pname).join(', ') : '';
-    $('pause').classList.add('show');
-  }
-  function closePause() { $('pause').classList.remove('show'); }
-  $('pResume').onclick = async () => {
-    const key = $('pKey').value.trim(); if (!key || !jobSnap) return;
-    $('pErr').textContent = 'Checking the key...'; $('pResume').disabled = true;
-    const r = await A.keyAdd({ provider: $('pProv').value, key });
-    $('pResume').disabled = false;
-    if (!r.ok) { $('pErr').textContent = r.error; return; }
-    if (r.status === 'limit') { $('pErr').textContent = 'That key works but has no credit left. Try another one.'; loadKeys(); return; }
-    $('pKey').value = ''; closePause(); await loadKeys(); A.searchResume(jobSnap.id);
-  };
-  $('pRetry').onclick = () => { if (jobSnap) { closePause(); A.searchResume(jobSnap.id); } };
-  $('pSkip').onclick = () => { if (!jobSnap) return; const n = jobSnap.needs || {}; closePause(); (n.providers || []).forEach((p, i) => A.searchResume(jobSnap.id, { exclude: p })); };
-  $('pAllow').onclick = () => { if (jobSnap) { closePause(); A.searchResume(jobSnap.id, { overrideCap: true }); } };
-  $('pLater').onclick = () => { if (jobSnap) dismissedPause = jobSnap.id; closePause(); updateBadge(); };
-  $('pCancel').onclick = () => { if (jobSnap) A.searchCancel(jobSnap.id); closePause(); };
-  $('pCapGo').onclick = () => { closePause(); setPage('keys'); loadKeys(); };
-
-  /* recent jobs */
-  async function loadRecent() {
-    let list = []; try { list = await A.jobsList(); } catch (e) {}
-    pausedCount = list.filter((j) => j.status === 'paused').length; updateBadge();
-    const box = $('recent'); box.innerHTML = '';
-    if (!list.length) { box.appendChild(el('div', 'umsg', 'Your searches will appear here.')); return; }
-    list.slice(0, 8).forEach((j) => {
-      const r = el('button', 'recentrow');
-      r.appendChild(el('span', 'rtxt', j.prompt));
-      r.appendChild(el('span', 'rstat ' + j.status, j.status === 'paused' ? 'paused' : j.status === 'done' ? money(j.spent) : j.status));
-      r.onclick = async () => { const full = await A.jobGet(j.id); if (full) { dismissedPause = null; $('askText').value = full.prompt; renderJob(full); } };
-      box.appendChild(r);
-    });
-  }
-  function updateBadge() { $('askBtn').classList.toggle('alert', pausedCount > 0); }
-
-  /* ---------- API keys page ---------- */
-  function renderKeys() {
-    const box = $('keyRows'); if (!box) return; box.innerHTML = '';
-    kdata.providers.forEach((p) => {
-      const ks = kdata.keys.filter((k) => k.provider === p.id);
-      const st = chipState(p.id);
-      const row = el('div', 'krow');
-      const who = el('div', 'kwho'); const d = el('span', 'dot'); d.style.background = p.color; d.textContent = p.name.charAt(0); who.appendChild(d); who.appendChild(el('b', '', p.name)); row.appendChild(who);
-      const mid = el('div', 'kmid');
-      if (!ks.length) mid.appendChild(el('span', 'umsg', 'No key yet. Get one at ' + p.help));
-      ks.forEach((k) => {
-        const line = el('div', 'kline' + (k.enabled ? '' : ' off'));
-        line.appendChild(el('span', 'keytxt', '•••••••• ' + (k.last4 || '')));
-        line.appendChild(el('span', 'kmeta', k.label + ' · ' + k.model));
-        const pill = el('span', 'pill ' + (k.status === 'ok' ? 'p-ok' : 'p-bad'), !k.enabled ? 'off' : k.status === 'ok' ? 'active' : k.status === 'invalid' ? 'rejected' : 'limit');
-        line.appendChild(pill);
-        const use = el('span', 'kuse', money(k.spent) + (k.budget > 0 ? ' of ' + money(k.budget) : '') + ' this month');
-        line.appendChild(use);
-        const bud = el('button', 'smallbtn', 'Budget'); bud.onclick = async () => { const v = await ask1('Monthly budget for this key in US dollars (0 = no limit)', String(k.budget || 0)); if (v !== null && !isNaN(parseFloat(v))) { A.keyUpdate({ id: k.id, budget: parseFloat(v) }); setTimeout(loadKeys, 300); } }; line.appendChild(bud);
-        const mod = el('button', 'smallbtn', 'Model'); mod.onclick = async () => { const v = await ask1('Model name to use with this key', k.model); if (v && v.trim()) { A.keyUpdate({ id: k.id, model: v.trim() }); setTimeout(loadKeys, 300); } }; line.appendChild(mod);
-        if (k.status !== 'ok') { const rs = el('button', 'smallbtn', 'Try again'); rs.onclick = () => { A.keyUpdate({ id: k.id, reset: true }); setTimeout(loadKeys, 300); }; line.appendChild(rs); }
-        const tg = el('button', 'smallbtn', k.enabled ? 'Turn off' : 'Turn on'); tg.onclick = () => { A.keyUpdate({ id: k.id, enabled: !k.enabled }); setTimeout(loadKeys, 300); }; line.appendChild(tg);
-        const rm = el('button', 'smallbtn dng', 'Remove'); rm.onclick = async () => { const v = await ask1('Type REMOVE to delete this ' + p.name + ' key from this PC', ''); if (v && v.trim().toUpperCase() === 'REMOVE') { A.keyRemove(k.id); setTimeout(loadKeys, 300); } }; line.appendChild(rm);
-        mid.appendChild(line);
-        if (!k.secure) mid.appendChild(el('div', 'umsg', 'Windows encryption is not available here, so this key is stored with light protection only.'));
-        if (k.note && k.status !== 'ok') mid.appendChild(el('div', 'umsg', k.note));
-      });
-      row.appendChild(mid);
-      const act = el('div', 'kact'); const add = el('button', 'btn', ks.length ? '+ Backup key' : '+ Add key'); add.onclick = () => openKeyModal(p.id); act.appendChild(add); row.appendChild(act);
-      box.appendChild(row);
-    });
-    // settings
-    $('capInput').value = kdata.settings.dailyCap;
-    $('smartChk').checked = !!kdata.settings.smart;
-    const ord = $('orderList'); ord.innerHTML = '';
-    kdata.settings.order.forEach((id, i) => {
-      const r = el('div', 'orow'); r.appendChild(el('span', '', (i + 1) + ' · ' + pname(id)));
-      const up = el('button', 'smallbtn', '↑'); up.disabled = i === 0; up.onclick = () => moveOrder(i, -1);
-      const dn = el('button', 'smallbtn', '↓'); dn.disabled = i === kdata.settings.order.length - 1; dn.onclick = () => moveOrder(i, 1);
-      r.appendChild(up); r.appendChild(dn); ord.appendChild(r);
-    });
-    $('keysSpend').textContent = 'Spent today: ' + money(kdata.settings.daySpent || 0);
-  }
-  function moveOrder(i, d) { const o = kdata.settings.order.slice(); const j = i + d; if (j < 0 || j >= o.length) return; [o[i], o[j]] = [o[j], o[i]]; kdata.settings.order = o; A.settingsSet({ order: o }); renderKeys(); }
-  $('capInput').onchange = () => { const v = parseFloat($('capInput').value); if (!isNaN(v)) A.settingsSet({ dailyCap: Math.max(0, v) }); setTimeout(loadKeys, 300); };
-  $('smartChk').onchange = () => A.settingsSet({ smart: $('smartChk').checked });
-
-  /* small one-line question (window.prompt does not exist in this app) */
-  function ask1(title, value) {
-    return new Promise((resolve) => {
-      $('vTitle').textContent = title; $('vInput').value = value; $('valmodal').classList.add('show'); $('vInput').focus(); $('vInput').select();
-      const done = (v) => { $('valmodal').classList.remove('show'); $('vOk').onclick = $('vCancel').onclick = $('vInput').onkeydown = null; resolve(v); };
-      $('vOk').onclick = () => done($('vInput').value);
-      $('vCancel').onclick = () => done(null);
-      $('vInput').onkeydown = (e) => { if (e.key === 'Enter') done($('vInput').value); else if (e.key === 'Escape') done(null); };
-    });
-  }
-
-  /* add-key modal */
-  function openKeyModal(pid) {
-    const sel = $('kmProv'); sel.innerHTML = '';
-    kdata.providers.forEach((p) => { const o = el('option', '', p.name); o.value = p.id; sel.appendChild(o); });
-    sel.value = pid || (kdata.providers[0] && kdata.providers[0].id);
-    $('kmKey').value = ''; $('kmLabel').value = ''; $('kmBudget').value = ''; $('kmErr').textContent = '';
-    const p = kdata.providers.find((x) => x.id === sel.value); $('kmModel').value = ''; $('kmModel').placeholder = p ? p.model : '';
-    $('kmHelp').textContent = p ? 'Get a key at ' + p.help : '';
-    $('keymodal').classList.add('show'); $('kmKey').focus();
-  }
-  $('kmProv').onchange = () => { const p = kdata.providers.find((x) => x.id === $('kmProv').value); $('kmModel').placeholder = p ? p.model : ''; $('kmHelp').textContent = p ? 'Get a key at ' + p.help : ''; };
-  $('kmCancel').onclick = () => $('keymodal').classList.remove('show');
-  $('kmSave').onclick = async () => {
-    $('kmErr').textContent = 'Checking the key with a tiny test request...'; $('kmSave').disabled = true;
-    const r = await A.keyAdd({ provider: $('kmProv').value, key: $('kmKey').value, label: $('kmLabel').value, model: $('kmModel').value, budget: parseFloat($('kmBudget').value) || 0 });
-    $('kmSave').disabled = false;
-    if (!r.ok) { $('kmErr').textContent = r.error; return; }
-    $('kmKey').value = ''; $('keymodal').classList.remove('show'); loadKeys();
-    if (jobSnap && jobSnap.status === 'paused') { A.searchResume(jobSnap.id); }
-  };
-  $('addKeyBtn').onclick = () => openKeyModal(null);
-  $('keysBtn').onclick = () => { setPage('keys'); if (state.active !== null) A.home(); loadKeys(); };
-  $('noKeysBtn').onclick = () => openKeyModal(null);
-
-  /* ---------- Usage history ---------- */
-  const LINE_COLORS = ['#4338CA', '#0F766E', '#C2410C', '#BE185D'];
-  function chartFor(s, list) {
-    const card = el('div', 'box chart');
-    card.appendChild(el('div', 'nm', s.name));
-    const pts = (list || []).filter((p) => p.items && p.items.length);
-    if (pts.length < 1) { card.appendChild(el('div', 'umsg', 'No usage recorded yet. Sign in to this account and press Refresh now.')).style.margin = '14px 0'; return card; }
-    const t0 = pts[0].t, t1 = pts[pts.length - 1].t, span = Math.max(1, t1 - t0);
-    const labels = []; pts.forEach((p) => p.items.forEach((it) => { if (!labels.includes(it.label) && labels.length < 3) labels.push(it.label); }));
-    const W = 400, H = 120, P = 6;
-    const ns = 'http://www.w3.org/2000/svg';
-    const svg = document.createElementNS(ns, 'svg'); svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.setAttribute('preserveAspectRatio', 'none');
-    [0, 50, 100].forEach((v) => { const y = H - P - (H - 2 * P) * v / 100; const ln = document.createElementNS(ns, 'line'); ln.setAttribute('x1', 0); ln.setAttribute('x2', W); ln.setAttribute('y1', y); ln.setAttribute('y2', y); ln.setAttribute('stroke', 'var(--line)'); ln.setAttribute('stroke-width', '1'); svg.appendChild(ln); });
-    labels.forEach((lab, k) => {
-      const d = pts.map((p, i) => { const it = p.items.find((x) => x.label === lab); if (!it) return null; const x = pts.length === 1 ? W / 2 : P + (W - 2 * P) * (p.t - t0) / span; const y = H - P - (H - 2 * P) * Math.min(100, it.pct) / 100; return [x, y]; }).filter(Boolean);
-      if (d.length === 1) { const c = document.createElementNS(ns, 'circle'); c.setAttribute('cx', d[0][0]); c.setAttribute('cy', d[0][1]); c.setAttribute('r', 3.5); c.setAttribute('fill', LINE_COLORS[k]); svg.appendChild(c); }
-      else if (d.length) { const pl = document.createElementNS(ns, 'polyline'); pl.setAttribute('points', d.map((q) => q.join(',')).join(' ')); pl.setAttribute('fill', 'none'); pl.setAttribute('stroke', LINE_COLORS[k]); pl.setAttribute('stroke-width', '2'); pl.setAttribute('vector-effect', 'non-scaling-stroke'); svg.appendChild(pl); }
-    });
-    card.appendChild(svg);
-    const lg = el('div', 'legend'); const last = pts[pts.length - 1];
-    labels.forEach((lab, k) => { const it = last.items.find((x) => x.label === lab); const sp = el('span'); const i = el('i'); i.style.background = LINE_COLORS[k]; sp.appendChild(i); sp.appendChild(document.createTextNode(lab + (it ? ': ' + Math.round(it.pct) + '%' : ''))); lg.appendChild(sp); });
-    const fmt = (t) => new Date(t).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-    lg.appendChild(el('span', '', fmt(t0) + ' \u2192 ' + fmt(t1) + ' (' + pts.length + ' readings)'));
-    card.appendChild(lg);
-    return card;
-  }
-  async function loadHistory() {
-    let h = {}; try { h = await A.getHistory(); } catch (e) {}
-    const g = $('histGrid'); g.innerHTML = '';
-    state.services.filter((s) => s.kind === 'claude').forEach((s) => g.appendChild(chartFor(s, h[s.id])));
-  }
-  $('histRefresh').onclick = () => { state.services.filter((s) => s.kind === 'claude').length && A.refreshUsage(); setTimeout(loadHistory, 1500); };
-  $('histClear').onclick = () => { A.clearHistory(); loadHistory(); };
 
   /* ---------- resizable / collapsible left bar ---------- */
   const grip = $('grip');
@@ -878,8 +511,6 @@
 
   /* ---------- wiring ---------- */
   $('homeBtn').onclick = () => { setPage('home'); A.home(); };
-  $('askBtn').onclick = () => { setPage('ask'); if (state.active !== null) A.home(); setTimeout(() => $('askText').focus(), 50); };
-  $('histBtn').onclick = () => { setPage('hist'); if (state.active !== null) A.home(); loadHistory(); };
   $('addBtn').onclick = () => openModal(null);
   $('searchBtn').onclick = openPalette;
   $('reloadBtn').onclick = () => A.reloadActive();
@@ -897,8 +528,8 @@
     else if (e.key === 'Escape') { closePalette(); if ($('modal').classList.contains('show')) closeModal(); if ($('look').classList.contains('show')) closeLook(); }
   });
   A.onState((s) => { state = s; render(); if (paletteOpen) fillPalette(); });
-  A.onUsage((u) => { usage[u.id] = u; renderHome(); renderBar(); if (page === 'hist' && !u.loading) setTimeout(loadHistory, 300); });
-  setPage('ask');
+  A.onUsage((u) => { usage[u.id] = u; renderHome(); renderBar(); });
+  setPage('home');
   render();
 </script>
 </body>

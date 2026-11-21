@@ -1,6 +1,6 @@
-# Multi AI (v2.0.0)
+# Multi AI (v2.1.0)
 
-New in 2.0.0: Universal Search runs on your own API keys (Claude, ChatGPT, Gemini, Grok, DeepSeek, Mistral, Perplexity). Best answer / Compare all / Combine modes, backup keys, budgets, daily cap, and jobs that pause when a key runs out and resume after you add a new one. The old browser-typing Ask tab was removed.
+New in 2.1.0: Universal Search, API keys and Usage history tabs removed. The app is back to apps, left bar, toolbar, split screen and Ctrl K.
 
 New in 1.4.0: Ask any AI tab (best AI picked automatically, moves on when one is full or signed out), usage history charts, close buttons on open apps.
 
