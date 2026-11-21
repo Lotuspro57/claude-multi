@@ -622,17 +622,30 @@ ipcMain.on('refresh-usage', (e, id) => refreshUsage(id));
 ipcMain.handle('get-history', () => history);
 ipcMain.on('clear-history', () => { history = {}; writeJson(historyFile, history); });
 
-// ---------- Ask tab (sends a question to the best signed-in AI, moves on when one is full) ----------
-const askEngine = require('./ask.js')({
-  getServices: () => services,
-  ensureView: (id) => { const v = ensureView(id); layout(); pushState(); return v; },
-  live: (id, on) => { if (on) askLive.add(id); else askLive.delete(id); layout(); },
-  getUsage: (id) => lastUsage[id],
-  send: (channel, payload) => sendToUI(channel, payload)
-});
-ipcMain.on('ask', (e, req) => askEngine.start(req));
-ipcMain.on('ask-cancel', (e, job) => askEngine.cancel(job));
-ipcMain.on('ask-show', (e, id) => { const s = find(id); if (s && !s.external) openService(id); });
+// ---------- Universal Search (asks the AI companies directly with the user's own API keys) ----------
+const { safeStorage } = require('electron');
+let apiEngine = null;
+function engine() {
+  if (!apiEngine) {
+    apiEngine = require('./api.js')({
+      dir: path.dirname(prefsFile), readJson, writeJson, safeStorage,
+      send: (channel, payload) => sendToUI(channel, payload)
+    });
+  }
+  return apiEngine;
+}
+ipcMain.handle('keys-list', () => engine().listAll());
+ipcMain.handle('key-add', (e, req) => engine().addKey(req || {}));
+ipcMain.on('key-update', (e, req) => engine().updateKey(req || {}));
+ipcMain.on('key-remove', (e, id) => engine().removeKey(String(id)));
+ipcMain.on('settings-set', (e, s) => engine().setSettings(s || {}));
+ipcMain.handle('search-start', (e, req) => engine().start(req || {}));
+ipcMain.on('search-resume', (e, id, opts) => engine().resume(String(id), opts || {}));
+ipcMain.on('search-cancel', (e, id) => engine().cancel(String(id)));
+ipcMain.handle('jobs-list', () => engine().listJobs());
+ipcMain.handle('job-get', (e, id) => engine().getJob(String(id)));
+ipcMain.on('job-delete', (e, id) => engine().deleteJob(String(id)));
+app.on('before-quit', () => { try { if (apiEngine) apiEngine.flush(); } catch (e) {} });
 ipcMain.on('nav', (e, dir) => navigate(focusId(), dir));
 
 // search / edit windows draw over the page area, so the service pages are hidden while they are open

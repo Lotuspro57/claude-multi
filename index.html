@@ -52,6 +52,37 @@
   .qs button:hover { color:var(--accent); border-color:var(--accent); }
   .prog { margin-top:10px; font-size:13px; color:var(--muted); min-height:18px; }
 
+  #keysPage { position:fixed; left:var(--rail-w); right:0; top:0; bottom:0; overflow-y:auto; padding:28px 36px 60px; display:none; }
+  body.home.p-keys #keysPage { display:block; }
+  body.home.p-keys #home, body.home.p-keys #askPage { display:none; }
+  .rbtn.alert::before { content:""; position:absolute; right:8px; top:8px; width:9px; height:9px; border-radius:50%; background:var(--hot); }
+  .kchips { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+  .kchip { display:flex; align-items:center; gap:8px; height:34px; padding:0 14px; border-radius:17px; background:var(--surface); border:1px solid var(--line); font-size:13px; font-weight:500; }
+  .kchip.none { border-style:dashed; color:var(--muted); } .kchip i { width:8px; height:8px; border-radius:50%; display:inline-block; }
+  .ans h3 .meta { font-weight:400; font-size:12px; color:var(--muted); margin-left:auto; }
+  .ans h3 .dot { width:24px; height:24px; border-radius:7px; display:grid; place-items:center; color:#fff; font-size:12px; font-weight:700; }
+  .md { user-select:text; line-height:1.65; font-size:14.5px; } .md p { margin:0 0 10px; } .md ul { margin:0 0 10px; padding-left:22px; }
+  .md pre.code { background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:12px; overflow:auto; font:12.5px Consolas,monospace; white-space:pre; margin:0 0 10px; }
+  .trow { font-size:13px; color:var(--muted); padding:2px 0; } .trow .ok { color:var(--good); } .trow .bad { color:var(--hot); }
+  details.ans summary { cursor:pointer; font-weight:600; margin-bottom:8px; }
+  .recentrow { display:flex; align-items:center; gap:10px; width:100%; text-align:left; padding:10px 12px; border-radius:10px; }
+  .recentrow:hover { background:var(--bg); } .rtxt { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .rstat { font-size:12px; color:var(--muted); } .rstat.paused { color:var(--hot); font-weight:600; }
+  .krow { display:grid; grid-template-columns:150px 1fr 140px; gap:14px; align-items:start; padding:14px 18px; border-top:1px solid var(--line); }
+  .krow:first-child { border-top:0; }
+  .kwho { display:flex; align-items:center; gap:10px; padding-top:4px; } .kwho .dot { width:26px; height:26px; border-radius:7px; display:grid; place-items:center; color:#fff; font-weight:700; font-size:13px; }
+  .kline { display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:4px 0; font-size:13px; } .kline.off { opacity:.5; }
+  .keytxt { font-family:Consolas,monospace; background:var(--bg); padding:4px 8px; border-radius:7px; } .kmeta { color:var(--muted); } .kuse { color:var(--muted); font-size:12px; }
+  .pill { display:inline-flex; align-items:center; height:22px; padding:0 9px; border-radius:11px; font-size:12px; font-weight:600; }
+  .p-ok { background:#DCFCE7; color:#14532D; } .p-bad { background:#FEE2E2; color:#7F1D1D; }
+  .kact { text-align:right; } .orow { display:flex; align-items:center; gap:8px; padding:3px 0; } .orow span { flex:1; }
+  .smallbtn.dng { color:var(--hot); } .smallbtn:disabled { opacity:.35; }
+  .sel { height:40px; border:1px solid var(--line); border-radius:10px; padding:0 10px; background:var(--bg); color:var(--text); font:inherit; }
+  .step { display:flex; align-items:center; gap:12px; font-size:13.5px; }
+  .steplist { border:1px solid var(--line); border-radius:12px; padding:4px 14px; }
+  .steplist .step { padding:6px 0; } .sb { width:22px; height:22px; border-radius:50%; display:grid; place-items:center; font-size:12px; flex:none; background:var(--line); }
+  .sb.done { background:#DCFCE7; color:#14532D; } .sb.failed { background:#FEE2E2; color:#7F1D1D; }
+
   /* ---- toolbar ---- */
   #bar { position:fixed; left:var(--rail-w); right:0; top:0; height:60px; background:var(--surface); border-bottom:1px solid var(--line); display:none; align-items:center; gap:6px; padding:0 12px; }
   body.app #bar { display:flex; }
@@ -148,7 +179,8 @@
   .pitem.sel,.pitem:hover { background:var(--bg); }
   .pitem img { width:22px; height:22px; border-radius:5px; }
   .pitem .k { margin-left:auto; font-size:12px; color:var(--muted); }
-  #modal { align-items:center; justify-content:center; }
+  #modal, #pause, #keymodal, #valmodal { align-items:center; justify-content:center; }
+  #pause .mbox, #keymodal .mbox { max-height:92vh; overflow-y:auto; }
   .mbox { width:min(440px,92vw); background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px; box-shadow:0 20px 60px rgba(0,0,0,.35); }
   .mbox h3 { margin:0 0 14px; }
   .mbox label.f { display:block; font-size:12px; color:var(--muted); margin:10px 0 4px; }
@@ -170,10 +202,11 @@
 
 <nav id="rail">
   <div id="grip" title="Drag to resize, double-click to shrink or expand"></div>
-  <button class="rbtn" id="askBtn" title="Ask any AI" aria-label="Ask any AI"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/></svg></span><span class="rl">Ask any AI</span></button>
+  <button class="rbtn" id="askBtn" title="Universal Search" aria-label="Universal Search"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/></svg></span><span class="rl">Universal Search</span></button>
   <button class="rbtn" id="homeBtn" title="All apps" aria-label="All apps"><span class="ic"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg></span><span class="rl">All apps</span></button>
   <div class="sep"></div>
   <div id="railApps"></div>
+  <button class="rbtn" id="keysBtn" title="API keys" aria-label="API keys"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3M14 9l2 2"/></svg></span><span class="rl">API keys</span></button>
   <button class="rbtn" id="histBtn" title="Usage history" aria-label="Usage history"><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 20V4M4 20h16M8 15l4-4 3 3 5-6"/></svg></span><span class="rl">Usage history</span></button>
   <button class="rbtn" id="addBtn" title="Add an app" aria-label="Add an app"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><span class="rl">Add an app</span></button>
   <button class="rbtn" id="collapseBtn" title="Shrink or expand this bar" aria-label="Shrink or expand"><span class="ic"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></span><span class="rl">Shrink</span></button>
@@ -211,21 +244,35 @@
 </main>
 
 <main id="askPage"><div class="wrap">
-  <div class="abanner"><div><h1 class="ph" style="margin:0">Ask any AI</h1><p class="pp" style="margin:4px 0 0">Type once. The best signed-in AI answers here, and the next one takes over if a page is full or signed out.</p></div><div class="by2">Designed by NURUZZAMAN</div></div>
+  <div class="abanner"><div><h1 class="ph" style="margin:0">Universal Search</h1><p class="pp" style="margin:4px 0 0">One question, every AI. Powered by your own API keys. If a key runs out, your job waits and carries on after you add a new one.</p></div><div class="by2">Designed by NURUZZAMAN</div></div>
   <div class="box">
-    <textarea id="askText" placeholder="What would you like to ask or do?" spellcheck="true"></textarea>
-    <div class="picks" id="picks"></div>
+    <textarea id="askText" placeholder="Ask anything or give a command..." spellcheck="true"></textarea>
     <div class="askbar">
-      <div class="seg" id="askMode"><button data-m="best" class="on">Best AI (auto)</button><button data-m="several">Ask several</button></div>
+      <div class="seg" id="askMode"><button data-m="best" class="on" title="One AI answers, the best one for this question">Best answer</button><button data-m="compare" title="Several AIs answer side by side">Compare all</button><button data-m="synthesize" title="Several AIs answer, then one merges them into the best answer">Combine</button></div>
       <span class="sp"></span>
+      <span class="umsg" id="spendLine"></span>
       <button class="btn" id="askStop" style="display:none">Stop</button>
-      <button class="btn pri" id="askGo">Ask</button>
+      <button class="btn pri" id="askGo">Search</button>
     </div>
   </div>
+  <div class="kchips" id="keyChips"></div>
+  <div class="box" id="noKeys" style="display:none;margin-top:12px"><b>No working API key yet.</b> <span class="umsg">Add a key for any AI company (Claude, ChatGPT, Gemini, Grok, DeepSeek, Mistral, Perplexity) to start.</span> <button class="btn pri" id="noKeysBtn" style="margin-left:10px">Add a key</button></div>
   <div class="prog" id="askProg"></div>
   <div class="steps" id="askSteps"></div>
   <div id="askAnswers"></div>
-  <div class="note">Works through the pages you are already signed in to, so no extra cost. Gemini and NotebookLM open in your own browser, so they are not included. If a site changes its page, that one app may fail and the next is tried.</div>
+  <div class="note" id="askStats"></div>
+  <h2>Recent searches</h2>
+  <div class="box" id="recent" style="padding:6px"></div>
+  <div class="note">Keys stay on this PC and are only sent to the company they belong to. Costs shown are estimates from published prices. Answers arrive when complete, not word by word.</div>
+</div></main>
+
+<main id="keysPage"><div class="wrap">
+  <div class="abanner"><div><h1 class="ph" style="margin:0">API keys</h1><p class="pp" style="margin:4px 0 0">Add keys, set budgets, choose who answers first. <span id="keysSpend"></span></p></div><button class="btn pri" id="addKeyBtn">+ Add key</button></div>
+  <div class="box" style="padding:0;overflow:hidden" id="keyRows"></div>
+  <div class="hgrid" style="margin-top:16px">
+    <div class="box"><div class="lbl" style="margin-bottom:10px">Who answers first</div><div id="orderList"></div><label class="chk"><input type="checkbox" id="smartChk"> Smart routing: pick the best AI for coding, research or writing questions</label></div>
+    <div class="box"><div class="lbl" style="margin-bottom:10px">Safety</div><label class="chk">Daily spending cap in US dollars (0 = none) <input type="text" id="capInput" style="width:70px;margin-left:8px;height:32px;border:1px solid var(--line);border-radius:8px;padding:0 8px;background:var(--bg);color:var(--text);user-select:text"></label><div class="umsg" style="margin-top:8px">When the cap is reached, a search pauses and asks before spending more. You can also give each key its own monthly budget.</div></div>
+  </div>
 </div></main>
 
 <main id="histPage"><div class="wrap">
@@ -234,6 +281,34 @@
   <div class="mact" style="margin:0 0 14px"><button class="btn" id="histRefresh">Refresh now</button><button class="btn dng" id="histClear">Clear history</button></div>
   <div class="hgrid" id="histGrid"></div>
 </div></main>
+
+<div class="veil" id="pause"><div class="mbox" style="width:min(600px,94vw)">
+  <h3 id="pTitle">A key has run out</h3>
+  <div class="umsg" id="pText" style="margin-bottom:10px"></div>
+  <div class="lbl" style="margin:8px 0 4px">Where your job stands</div>
+  <div class="steplist" id="pSteps"></div>
+  <div id="pKeyRow">
+    <div class="lbl" style="margin:14px 0 6px">Paste a new key to continue from where it stopped</div>
+    <div style="display:flex;gap:8px"><select id="pProv" class="sel"></select><input type="text" id="pKey" placeholder="Paste the new key" autocomplete="off" spellcheck="false" style="flex:1;height:40px;border:1px solid var(--accent);border-radius:10px;padding:0 12px;background:var(--bg);color:var(--text);font-family:Consolas,monospace;user-select:text"><button class="btn pri" id="pResume">Resume</button></div>
+    <div class="umsg" id="pErr" style="margin-top:6px;color:var(--hot)"></div>
+  </div>
+  <div id="pCap" style="display:none"><div class="mact" style="margin-top:10px"><button class="btn pri" id="pAllow">Allow this search to continue</button><button class="btn" id="pCapGo">Change the cap</button></div></div>
+  <div class="mact" style="flex-wrap:wrap"><button class="btn" id="pRetry">Try again</button><button class="btn" id="pSkip"></button><span class="sp"></span><button class="btn" id="pLater">Wait, remind me later</button><button class="btn dng" id="pCancel">Cancel job</button></div>
+</div></div>
+
+<div class="veil" id="keymodal"><div class="mbox">
+  <h3>Add an API key</h3>
+  <label class="f" for="kmProv">Company</label><select id="kmProv" class="sel" style="width:100%"></select>
+  <div class="umsg" id="kmHelp" style="margin-top:4px"></div>
+  <label class="f" for="kmKey">Key</label><input type="text" id="kmKey" autocomplete="off" spellcheck="false" style="font-family:Consolas,monospace">
+  <label class="f" for="kmLabel">Name (optional)</label><input type="text" id="kmLabel" placeholder="for example: Personal or Backup">
+  <label class="f" for="kmModel">Model (optional)</label><input type="text" id="kmModel">
+  <label class="f" for="kmBudget">Monthly budget in US dollars (optional)</label><input type="text" id="kmBudget" placeholder="0 = no limit">
+  <div class="umsg" id="kmErr" style="margin-top:8px;color:var(--hot)"></div>
+  <div class="mact"><span class="sp"></span><button class="btn" id="kmCancel">Cancel</button><button class="btn pri" id="kmSave">Check and save</button></div>
+</div></div>
+
+<div class="veil" id="valmodal"><div class="mbox" style="width:min(380px,92vw)"><h3 id="vTitle"></h3><input type="text" id="vInput"><div class="mact"><span class="sp"></span><button class="btn" id="vCancel">Cancel</button><button class="btn pri" id="vOk">OK</button></div></div></div>
 
 <div class="veil" id="palette"><div class="pbox"><input id="pin" placeholder="Open an app&hellip;" autocomplete="off" spellcheck="false"><div id="plist"></div></div></div>
 
@@ -475,78 +550,273 @@
   let page = 'ask';
   function setPage(p) {
     page = p;
-    document.body.classList.remove('p-home', 'p-ask', 'p-hist');
+    document.body.classList.remove('p-home', 'p-ask', 'p-hist', 'p-keys');
     document.body.classList.add('p-' + p);
     $('homeBtn').classList.toggle('on', p === 'home' && state.active === null);
     $('askBtn').classList.toggle('on', p === 'ask' && state.active === null);
     $('histBtn').classList.toggle('on', p === 'hist' && state.active === null);
-    if (p === 'ask') renderPicks();
+    $('keysBtn').classList.toggle('on', p === 'keys' && state.active === null);
+    if (p === 'ask') refreshSearch();
+    if (p === 'keys') loadKeys();
   }
 
-  /* ---------- Ask ---------- */
-  let askMode = 'best', job = null, answers = {};
-  function renderPicks() {
-    const box = $('picks'); const prev = new Set([...box.querySelectorAll('input:checked')].map((i) => i.value));
-    box.innerHTML = '';
-    state.services.filter((s) => !s.external).forEach((s) => {
-      const l = el('label'); const i = el('input'); i.type = 'checkbox'; i.value = s.id;
-      i.checked = prev.size ? prev.has(s.id) : (s.kind !== 'claude' || s.id === 'claude1');
-      l.appendChild(i); l.appendChild(document.createTextNode(s.name)); box.appendChild(l);
+  /* ---------- Universal Search (API keys) ---------- */
+  let kdata = { providers: [], keys: [], settings: { dailyCap: 2, smart: true, order: [], daySpent: 0 } };
+  let askMode = 'best', jobSnap = null, pendingPrompt = null, dismissedPause = null, pausedCount = 0;
+  const pname = (id) => (kdata.providers.find((p) => p.id === id) || { name: id }).name;
+  const pcolor = (id) => (kdata.providers.find((p) => p.id === id) || { color: '#555' }).color;
+  const money = (n) => '$' + (n < 0.01 && n > 0 ? n.toFixed(4) : n.toFixed(2));
+
+  async function loadKeys() { try { kdata = await A.keysList(); } catch (e) {} renderChips(); renderKeys(); }
+  async function refreshSearch() { await loadKeys(); loadRecent(); }
+
+  // safe, tiny text formatter: paragraphs, **bold**, bullets, ``` code ```
+  function fmtInline(parent, line) {
+    line.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).forEach((part) => {
+      if (/^\*\*[^*]+\*\*$/.test(part)) parent.appendChild(el('b', '', part.slice(2, -2)));
+      else if (/^`[^`]+`$/.test(part)) { const c = el('code', '', part.slice(1, -1)); c.style.cssText = 'background:var(--bg);padding:1px 5px;border-radius:5px'; parent.appendChild(c); }
+      else if (part) parent.appendChild(document.createTextNode(part));
     });
-    box.classList.toggle('show', askMode === 'several');
   }
+  function renderText(box, text) {
+    box.innerHTML = '';
+    String(text || '').split(/```/).forEach((seg, i) => {
+      if (i % 2 === 1) { const pre = el('pre', 'code'); pre.textContent = seg.replace(/^[a-zA-Z0-9+#-]*\n/, '').replace(/\n$/, ''); box.appendChild(pre); return; }
+      seg.split(/\n{2,}/).forEach((para) => {
+        if (!para.trim()) return;
+        const lines = para.split('\n');
+        if (lines.every((l) => /^\s*([-*]|\d+\.)\s+/.test(l))) {
+          const ul = el('ul'); lines.forEach((l) => { const li = el('li'); fmtInline(li, l.replace(/^\s*([-*]|\d+\.)\s+/, '')); ul.appendChild(li); }); box.appendChild(ul);
+        } else {
+          const p = el('p'); lines.forEach((l, k) => { if (k) p.appendChild(document.createElement('br')); fmtInline(p, l.replace(/^#{1,4}\s*/, '')); }); box.appendChild(p);
+        }
+      });
+    });
+  }
+
+  /* provider chips */
+  function chipState(pid) {
+    const ks = kdata.keys.filter((k) => k.provider === pid && k.enabled);
+    if (!ks.length) return { cls: 'none', text: 'no key' };
+    const okk = ks.filter((k) => k.status === 'ok' && !(k.budget > 0 && k.spent >= k.budget));
+    if (!okk.length) return { cls: 'bad', text: ks.some((k) => k.status === 'invalid') ? 'key rejected' : 'limit reached' };
+    const near = okk.some((k) => k.budget > 0 && k.spent / k.budget >= 0.8);
+    return { cls: near ? 'warn' : 'ok', text: near ? 'near budget' : 'key ok' };
+  }
+  function renderChips() {
+    const box = $('keyChips'); if (!box) return; box.innerHTML = '';
+    kdata.providers.forEach((p) => {
+      const s = chipState(p.id);
+      const c = el('button', 'kchip ' + s.cls); const i = el('i'); i.style.background = s.cls === 'ok' ? 'var(--good)' : s.cls === 'warn' ? 'var(--warn)' : s.cls === 'bad' ? 'var(--hot)' : 'var(--line)';
+      c.appendChild(i); c.appendChild(document.createTextNode(p.name + ' · ' + s.text));
+      c.onclick = () => (s.cls === 'none' ? openKeyModal(p.id) : (setPage('keys'), loadKeys()));
+      box.appendChild(c);
+    });
+    const any = kdata.keys.some((k) => k.enabled && k.status === 'ok');
+    $('noKeys').style.display = any ? 'none' : '';
+    $('spendLine').textContent = 'Spent today ' + money(kdata.settings.daySpent || 0) + (kdata.settings.dailyCap > 0 ? ' of your ' + money(kdata.settings.dailyCap) + ' daily cap' : '');
+  }
+
+  /* modes + start */
   document.querySelectorAll('#askMode button').forEach((b) => b.onclick = () => {
     askMode = b.dataset.m;
     document.querySelectorAll('#askMode button').forEach((x) => x.classList.toggle('on', x === b));
-    renderPicks();
   });
   function setRunning(on) { $('askGo').style.display = on ? 'none' : ''; $('askStop').style.display = on ? '' : 'none'; }
-  function startAsk() {
+  async function startSearch(mode) {
     const prompt = $('askText').value.trim(); if (!prompt) return;
-    job = 'j' + Date.now(); answers = {};
-    $('askSteps').innerHTML = ''; $('askAnswers').innerHTML = ''; $('askProg').textContent = 'Starting...';
-    const ids = askMode === 'several' ? [...document.querySelectorAll('#picks input:checked')].map((i) => i.value) : [];
-    if (askMode === 'several' && !ids.length) return;
+    jobSnap = null; dismissedPause = null; pendingPrompt = prompt;
+    $('askAnswers').innerHTML = ''; $('askSteps').innerHTML = ''; $('askProg').textContent = 'Starting...';
     setRunning(true);
-    A.ask({ job, prompt, mode: askMode, ids });
+    try { await A.searchStart({ prompt, mode: mode || askMode }); } catch (e) { $('askProg').textContent = 'Could not start: ' + e.message; setRunning(false); }
   }
-  $('askGo').onclick = startAsk;
-  $('askStop').onclick = () => { if (job) A.askCancel(job); setRunning(false); };
-  $('askText').addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); startAsk(); } });
-  const LABEL = { trying: 'trying', done: 'answered', limit: 'limit reached', login: 'not signed in', failed: 'failed', cancelled: 'stopped' };
-  function stepPill(id, name, status, note) {
-    let p = document.getElementById('st-' + id);
-    if (!p) { p = el('span', 'st'); p.id = 'st-' + id; $('askSteps').appendChild(p); }
-    p.className = 'st ' + status;
-    p.textContent = name + ' \u00b7 ' + (LABEL[status] || status) + (status !== 'done' && status !== 'trying' && note ? ' (' + note + ')' : '');
-    p.style.cursor = 'pointer'; p.title = 'Click to open ' + name + ' and see the page'; p.onclick = () => A.askShow(id);
-  }
-  function answerCard(id, name, text, final) {
-    let c = document.getElementById('an-' + id);
-    if (!c) {
-      c = el('div', 'box ans'); c.id = 'an-' + id;
-      const h = el('h3'); h.appendChild(el('span', '', 'Answer from ' + name)); c.appendChild(h);
-      c.appendChild(el('pre'));
+  $('askGo').onclick = () => startSearch();
+  $('askStop').onclick = () => { if (jobSnap) A.searchCancel(jobSnap.id); setRunning(false); };
+  $('askText').addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); startSearch(); } });
+
+  /* showing a job */
+  const STEP_ICON = { done: '✓', failed: '!', running: '…', pending: '·' };
+  function renderJob(j) {
+    jobSnap = j;
+    const running = j.status === 'running';
+    setRunning(running);
+    const steps = $('askSteps'); steps.innerHTML = '';
+    j.steps.forEach((s) => {
+      const p = el('span', 'st ' + (s.status === 'done' ? 'done' : s.status === 'failed' ? 'failed' : s.status === 'running' ? 'trying' : ''));
+      const who = s.usedProvider ? ' · ' + pname(s.usedProvider) : (s.trying && s.status === 'running' ? ' · ' + pname(s.trying) : '');
+      p.textContent = STEP_ICON[s.status] + ' ' + s.label + who;
+      steps.appendChild(p);
+    });
+    $('askProg').textContent = running ? 'Working...' : j.status === 'paused' ? 'Paused: waiting for you' : j.status === 'cancelled' ? 'Stopped' : '';
+    const box = $('askAnswers'); box.innerHTML = '';
+    const answers = j.final && j.final.answers || [];
+    answers.forEach((a) => {
+      const c = el('div', 'box ans');
+      const h = el('h3'); const d = el('span', 'dot'); d.style.background = pcolor(a.provider); d.textContent = pname(a.provider).charAt(0); h.appendChild(d);
+      h.appendChild(el('span', '', (j.mode === 'synthesize' ? 'Combined answer' : 'Answer') + ' from ' + pname(a.provider)));
+      h.appendChild(el('span', 'meta', (a.tin + a.tout).toLocaleString() + ' tokens · about ' + money(a.cost || 0) + ' · ' + ((a.ms || 0) / 1000).toFixed(1) + ' s'));
+      c.appendChild(h);
+      const body = el('div', 'md'); renderText(body, a.text); c.appendChild(body);
       const acts = el('div', 'acts');
-      const cp = el('button', 'smallbtn', 'Copy'); cp.onclick = () => { navigator.clipboard.writeText(c.querySelector('pre').textContent).catch(() => {}); cp.textContent = 'Copied'; };
-      const sh = el('button', 'smallbtn', 'Open ' + name); sh.onclick = () => A.askShow(id);
-      acts.appendChild(cp); acts.appendChild(sh); c.appendChild(acts);
-      $('askAnswers').appendChild(c);
+      const cp = el('button', 'smallbtn', 'Copy'); cp.onclick = () => { navigator.clipboard.writeText(a.text).catch(() => {}); cp.textContent = 'Copied'; }; acts.appendChild(cp);
+      if (j.mode === 'best') { const cm = el('button', 'smallbtn', 'Compare with other AIs'); cm.onclick = () => startSearch('compare'); acts.appendChild(cm); }
+      c.appendChild(acts); box.appendChild(c);
+    });
+    if (j.mode === 'synthesize') {
+      const parts = j.steps.filter((s) => s.phase === 1 && s.status === 'done');
+      if (parts.length) { const d = el('details', 'box ans'); d.appendChild(el('summary', '', 'Show the ' + parts.length + ' answers it was built from'));
+        parts.forEach((s) => { d.appendChild(el('h3', '', pname(s.usedProvider))); const m = el('div', 'md'); renderText(m, s.out); d.appendChild(m); }); box.appendChild(d); }
     }
-    c.querySelector('pre').textContent = text;
+    // how it was answered
+    const trail = []; j.steps.forEach((s) => (s.trail || []).forEach((t) => trail.push(t)));
+    if (trail.length) {
+      const c = el('div', 'box ans'); c.appendChild(el('h3', '', 'How this was answered'));
+      trail.forEach((t) => { const r = el('div', 'trow'); r.appendChild(el('span', t.result === 'ok' ? 'ok' : 'bad', t.result === 'ok' ? '●' : '●'));
+        r.appendChild(document.createTextNode(' ' + pname(t.provider) + ' (' + (t.key || 'key') + '): ' + (t.result === 'ok' ? 'answered' : t.result === 'limit' ? 'out of credit, moved on' : t.result === 'invalid' ? 'key rejected, moved on' : t.result === 'rate' ? 'busy' : 'problem') + (t.note && t.result !== 'ok' ? ' — ' + t.note : ''))); c.appendChild(r); });
+      box.appendChild(c);
+    }
+    if (j.status === 'done' && j.needs && j.needs.reason === 'partial') box.appendChild(el('div', 'note', j.needs.text + ' You can add or replace a key in API keys.'));
+    $('askStats').textContent = j.spent ? 'This search cost about ' + money(j.spent) : '';
+    if (j.status === 'paused' && dismissedPause !== j.id) openPause(j); else if (j.status !== 'paused') closePause();
   }
-  A.onAskUpdate((u) => {
-    if (u.job !== job) return;
-    if (u.plan && u.kind) { const k = { code: 'a coding question', research: 'a research question', writing: 'a writing task', general: 'a general question' }[u.kind]; $('askSteps').dataset.kind = k; }
-    if (u.id && u.status) {
-      $('askProg').textContent = u.status === 'trying' ? (u.note || '') : '';
-      stepPill(u.id, u.name, u.status, u.note);
-      if (u.text) answerCard(u.id, u.name, u.text);
-    }
-    if (u.none) { const n = el('div', 'note', 'None of the apps could answer right now. Check that you are signed in, or try again later.'); $('askAnswers').appendChild(n); }
-    if (u.error) { $('askAnswers').appendChild(el('div', 'note', 'Something went wrong: ' + u.error)); }
-    if (u.finished) { setRunning(false); $('askProg').textContent = ''; }
+  A.onSearchUpdate((j) => {
+    if (!jobSnap && pendingPrompt !== null && j.prompt === pendingPrompt) { jobSnap = j; }
+    if (jobSnap && j.id === jobSnap.id) renderJob(j);
+    if (j.status !== 'running') { loadRecent(); loadKeys(); }
+    updateBadge();
   });
+
+  /* paused job (out of key) */
+  function openPause(j) {
+    const n = j.needs || {};
+    $('pTitle').textContent = n.reason === 'cap' ? 'Daily spending cap reached' : n.reason === 'nokey' ? 'Add an API key to begin' : 'A key has run out';
+    $('pText').textContent = n.text || '';
+    const sl = $('pSteps'); sl.innerHTML = '';
+    j.steps.forEach((s) => { const r = el('div', 'step'); const b = el('b', '', STEP_ICON[s.status] || '·'); b.className = 'sb ' + s.status; r.appendChild(b); r.appendChild(el('div', '', s.label + (s.usedProvider ? ' · ' + pname(s.usedProvider) : '') + (s.status === 'failed' ? ' · stopped' : ''))); sl.appendChild(r); });
+    const sel = $('pProv'); sel.innerHTML = '';
+    const need = (n.providers && n.providers.length) ? n.providers : kdata.providers.map((p) => p.id);
+    need.forEach((id) => { const o = el('option', '', pname(id)); o.value = id; sel.appendChild(o); });
+    $('pKeyRow').style.display = n.reason === 'cap' ? 'none' : '';
+    $('pCap').style.display = n.reason === 'cap' ? '' : 'none';
+    $('pErr').textContent = ''; $('pKey').value = '';
+    const sk = $('pSkip'); sk.style.display = (n.providers && n.providers.length) ? '' : 'none';
+    sk.textContent = n.providers && n.providers.length ? 'Continue without ' + n.providers.map(pname).join(', ') : '';
+    $('pause').classList.add('show');
+  }
+  function closePause() { $('pause').classList.remove('show'); }
+  $('pResume').onclick = async () => {
+    const key = $('pKey').value.trim(); if (!key || !jobSnap) return;
+    $('pErr').textContent = 'Checking the key...'; $('pResume').disabled = true;
+    const r = await A.keyAdd({ provider: $('pProv').value, key });
+    $('pResume').disabled = false;
+    if (!r.ok) { $('pErr').textContent = r.error; return; }
+    if (r.status === 'limit') { $('pErr').textContent = 'That key works but has no credit left. Try another one.'; loadKeys(); return; }
+    $('pKey').value = ''; closePause(); await loadKeys(); A.searchResume(jobSnap.id);
+  };
+  $('pRetry').onclick = () => { if (jobSnap) { closePause(); A.searchResume(jobSnap.id); } };
+  $('pSkip').onclick = () => { if (!jobSnap) return; const n = jobSnap.needs || {}; closePause(); (n.providers || []).forEach((p, i) => A.searchResume(jobSnap.id, { exclude: p })); };
+  $('pAllow').onclick = () => { if (jobSnap) { closePause(); A.searchResume(jobSnap.id, { overrideCap: true }); } };
+  $('pLater').onclick = () => { if (jobSnap) dismissedPause = jobSnap.id; closePause(); updateBadge(); };
+  $('pCancel').onclick = () => { if (jobSnap) A.searchCancel(jobSnap.id); closePause(); };
+  $('pCapGo').onclick = () => { closePause(); setPage('keys'); loadKeys(); };
+
+  /* recent jobs */
+  async function loadRecent() {
+    let list = []; try { list = await A.jobsList(); } catch (e) {}
+    pausedCount = list.filter((j) => j.status === 'paused').length; updateBadge();
+    const box = $('recent'); box.innerHTML = '';
+    if (!list.length) { box.appendChild(el('div', 'umsg', 'Your searches will appear here.')); return; }
+    list.slice(0, 8).forEach((j) => {
+      const r = el('button', 'recentrow');
+      r.appendChild(el('span', 'rtxt', j.prompt));
+      r.appendChild(el('span', 'rstat ' + j.status, j.status === 'paused' ? 'paused' : j.status === 'done' ? money(j.spent) : j.status));
+      r.onclick = async () => { const full = await A.jobGet(j.id); if (full) { dismissedPause = null; $('askText').value = full.prompt; renderJob(full); } };
+      box.appendChild(r);
+    });
+  }
+  function updateBadge() { $('askBtn').classList.toggle('alert', pausedCount > 0); }
+
+  /* ---------- API keys page ---------- */
+  function renderKeys() {
+    const box = $('keyRows'); if (!box) return; box.innerHTML = '';
+    kdata.providers.forEach((p) => {
+      const ks = kdata.keys.filter((k) => k.provider === p.id);
+      const st = chipState(p.id);
+      const row = el('div', 'krow');
+      const who = el('div', 'kwho'); const d = el('span', 'dot'); d.style.background = p.color; d.textContent = p.name.charAt(0); who.appendChild(d); who.appendChild(el('b', '', p.name)); row.appendChild(who);
+      const mid = el('div', 'kmid');
+      if (!ks.length) mid.appendChild(el('span', 'umsg', 'No key yet. Get one at ' + p.help));
+      ks.forEach((k) => {
+        const line = el('div', 'kline' + (k.enabled ? '' : ' off'));
+        line.appendChild(el('span', 'keytxt', '•••••••• ' + (k.last4 || '')));
+        line.appendChild(el('span', 'kmeta', k.label + ' · ' + k.model));
+        const pill = el('span', 'pill ' + (k.status === 'ok' ? 'p-ok' : 'p-bad'), !k.enabled ? 'off' : k.status === 'ok' ? 'active' : k.status === 'invalid' ? 'rejected' : 'limit');
+        line.appendChild(pill);
+        const use = el('span', 'kuse', money(k.spent) + (k.budget > 0 ? ' of ' + money(k.budget) : '') + ' this month');
+        line.appendChild(use);
+        const bud = el('button', 'smallbtn', 'Budget'); bud.onclick = async () => { const v = await ask1('Monthly budget for this key in US dollars (0 = no limit)', String(k.budget || 0)); if (v !== null && !isNaN(parseFloat(v))) { A.keyUpdate({ id: k.id, budget: parseFloat(v) }); setTimeout(loadKeys, 300); } }; line.appendChild(bud);
+        const mod = el('button', 'smallbtn', 'Model'); mod.onclick = async () => { const v = await ask1('Model name to use with this key', k.model); if (v && v.trim()) { A.keyUpdate({ id: k.id, model: v.trim() }); setTimeout(loadKeys, 300); } }; line.appendChild(mod);
+        if (k.status !== 'ok') { const rs = el('button', 'smallbtn', 'Try again'); rs.onclick = () => { A.keyUpdate({ id: k.id, reset: true }); setTimeout(loadKeys, 300); }; line.appendChild(rs); }
+        const tg = el('button', 'smallbtn', k.enabled ? 'Turn off' : 'Turn on'); tg.onclick = () => { A.keyUpdate({ id: k.id, enabled: !k.enabled }); setTimeout(loadKeys, 300); }; line.appendChild(tg);
+        const rm = el('button', 'smallbtn dng', 'Remove'); rm.onclick = async () => { const v = await ask1('Type REMOVE to delete this ' + p.name + ' key from this PC', ''); if (v && v.trim().toUpperCase() === 'REMOVE') { A.keyRemove(k.id); setTimeout(loadKeys, 300); } }; line.appendChild(rm);
+        mid.appendChild(line);
+        if (!k.secure) mid.appendChild(el('div', 'umsg', 'Windows encryption is not available here, so this key is stored with light protection only.'));
+        if (k.note && k.status !== 'ok') mid.appendChild(el('div', 'umsg', k.note));
+      });
+      row.appendChild(mid);
+      const act = el('div', 'kact'); const add = el('button', 'btn', ks.length ? '+ Backup key' : '+ Add key'); add.onclick = () => openKeyModal(p.id); act.appendChild(add); row.appendChild(act);
+      box.appendChild(row);
+    });
+    // settings
+    $('capInput').value = kdata.settings.dailyCap;
+    $('smartChk').checked = !!kdata.settings.smart;
+    const ord = $('orderList'); ord.innerHTML = '';
+    kdata.settings.order.forEach((id, i) => {
+      const r = el('div', 'orow'); r.appendChild(el('span', '', (i + 1) + ' · ' + pname(id)));
+      const up = el('button', 'smallbtn', '↑'); up.disabled = i === 0; up.onclick = () => moveOrder(i, -1);
+      const dn = el('button', 'smallbtn', '↓'); dn.disabled = i === kdata.settings.order.length - 1; dn.onclick = () => moveOrder(i, 1);
+      r.appendChild(up); r.appendChild(dn); ord.appendChild(r);
+    });
+    $('keysSpend').textContent = 'Spent today: ' + money(kdata.settings.daySpent || 0);
+  }
+  function moveOrder(i, d) { const o = kdata.settings.order.slice(); const j = i + d; if (j < 0 || j >= o.length) return; [o[i], o[j]] = [o[j], o[i]]; kdata.settings.order = o; A.settingsSet({ order: o }); renderKeys(); }
+  $('capInput').onchange = () => { const v = parseFloat($('capInput').value); if (!isNaN(v)) A.settingsSet({ dailyCap: Math.max(0, v) }); setTimeout(loadKeys, 300); };
+  $('smartChk').onchange = () => A.settingsSet({ smart: $('smartChk').checked });
+
+  /* small one-line question (window.prompt does not exist in this app) */
+  function ask1(title, value) {
+    return new Promise((resolve) => {
+      $('vTitle').textContent = title; $('vInput').value = value; $('valmodal').classList.add('show'); $('vInput').focus(); $('vInput').select();
+      const done = (v) => { $('valmodal').classList.remove('show'); $('vOk').onclick = $('vCancel').onclick = $('vInput').onkeydown = null; resolve(v); };
+      $('vOk').onclick = () => done($('vInput').value);
+      $('vCancel').onclick = () => done(null);
+      $('vInput').onkeydown = (e) => { if (e.key === 'Enter') done($('vInput').value); else if (e.key === 'Escape') done(null); };
+    });
+  }
+
+  /* add-key modal */
+  function openKeyModal(pid) {
+    const sel = $('kmProv'); sel.innerHTML = '';
+    kdata.providers.forEach((p) => { const o = el('option', '', p.name); o.value = p.id; sel.appendChild(o); });
+    sel.value = pid || (kdata.providers[0] && kdata.providers[0].id);
+    $('kmKey').value = ''; $('kmLabel').value = ''; $('kmBudget').value = ''; $('kmErr').textContent = '';
+    const p = kdata.providers.find((x) => x.id === sel.value); $('kmModel').value = ''; $('kmModel').placeholder = p ? p.model : '';
+    $('kmHelp').textContent = p ? 'Get a key at ' + p.help : '';
+    $('keymodal').classList.add('show'); $('kmKey').focus();
+  }
+  $('kmProv').onchange = () => { const p = kdata.providers.find((x) => x.id === $('kmProv').value); $('kmModel').placeholder = p ? p.model : ''; $('kmHelp').textContent = p ? 'Get a key at ' + p.help : ''; };
+  $('kmCancel').onclick = () => $('keymodal').classList.remove('show');
+  $('kmSave').onclick = async () => {
+    $('kmErr').textContent = 'Checking the key with a tiny test request...'; $('kmSave').disabled = true;
+    const r = await A.keyAdd({ provider: $('kmProv').value, key: $('kmKey').value, label: $('kmLabel').value, model: $('kmModel').value, budget: parseFloat($('kmBudget').value) || 0 });
+    $('kmSave').disabled = false;
+    if (!r.ok) { $('kmErr').textContent = r.error; return; }
+    $('kmKey').value = ''; $('keymodal').classList.remove('show'); loadKeys();
+    if (jobSnap && jobSnap.status === 'paused') { A.searchResume(jobSnap.id); }
+  };
+  $('addKeyBtn').onclick = () => openKeyModal(null);
+  $('keysBtn').onclick = () => { setPage('keys'); if (state.active !== null) A.home(); loadKeys(); };
+  $('noKeysBtn').onclick = () => openKeyModal(null);
 
   /* ---------- Usage history ---------- */
   const LINE_COLORS = ['#4338CA', '#0F766E', '#C2410C', '#BE185D'];
