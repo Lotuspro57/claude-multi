@@ -570,6 +570,7 @@ function createWindow() {
     setTimeout(() => { if (!ui.webContents.isDestroyed()) ui.webContents.reload(); }, 500);
   });
   ui.webContents.on('did-finish-load', () => {
+    if (global.__patchOk) global.__patchOk(); // an installed update started fine
     uiReady = true;
     pushState();
   });
@@ -740,3 +741,102 @@ if (!app.requestSingleInstanceLock()) {
   });
   app.on('window-all-closed', () => app.quit());
 }
+
+// ---------- updates from a folder on this PC (no reinstall) ----------
+const { execFile } = require('child_process');
+const RUN_VERSION = (() => { try { return require('./package.json').version; } catch (e) { return '0.0.0'; } })();
+const PACK_FILES = ['main.js', 'preload.js', 'webauthn-off.js', 'index.html', 'package.json'];
+const REQUIRED = ['main.js', 'preload.js', 'index.html', 'package.json'];
+function vcmp(a, b) {
+  const x = String(a).split('.').map(Number), y = String(b).split('.').map(Number);
+  for (let i = 0; i < 3; i++) { const d = (x[i] || 0) - (y[i] || 0); if (d) return d > 0 ? 1 : -1; }
+  return 0;
+}
+function updateDir() {
+  let d = prefs.updateDir;
+  if (!d || typeof d !== 'string') d = path.join(app.getPath('documents'), 'Claude Multi Updates');
+  try { fs.mkdirSync(d, { recursive: true }); } catch (e) {}
+  return d;
+}
+function run(cmd, args) { return new Promise((resolve, reject) => execFile(cmd, args, { windowsHide: true, timeout: 60000 }, (err) => (err ? reject(err) : resolve()))); }
+async function unzipTo(zip, dest) {
+  fs.mkdirSync(dest, { recursive: true });
+  try { if (process.platform === 'win32') await run('tar', ['-xf', zip, '-C', dest]); else await run('unzip', ['-o', '-q', zip, '-d', dest]); }
+  catch (e) {
+    if (process.platform !== 'win32') throw e;
+    await run('powershell', ['-NoProfile', '-Command', "Expand-Archive -LiteralPath '" + zip.replace(/'/g, "''") + "' -DestinationPath '" + dest.replace(/'/g, "''") + "' -Force"]);
+  }
+}
+function packRoot(dir) { // the folder that really holds the files (a zip may have one folder inside)
+  if (fs.existsSync(path.join(dir, 'package.json'))) return dir;
+  for (const n of fs.readdirSync(dir)) { const f = path.join(dir, n); try { if (fs.statSync(f).isDirectory() && fs.existsSync(path.join(f, 'package.json'))) return f; } catch (e) {} }
+  return null;
+}
+function readPack(root) {
+  if (!root) return null;
+  try {
+    const pj = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
+    if (pj.name !== 'claude-multi' || !/^\d+\.\d+\.\d+$/.test(String(pj.version))) return null;
+    for (const f of REQUIRED) if (!fs.existsSync(path.join(root, f))) return null;
+    // refuse a pack with a typo in its code, before it can break the app
+    const vm = require('vm');
+    for (const f of ['main.js', 'preload.js']) new vm.Script(fs.readFileSync(path.join(root, f), 'utf8'), { filename: f });
+    return { version: pj.version, root };
+  } catch (e) { return null; }
+}
+let pendingPack = null;
+async function scanUpdates() {
+  const dir = updateDir();
+  const cands = [];
+  const own = readPack(packRoot(dir) === dir ? dir : null); if (own) cands.push({ ...own, from: dir });
+  let n = 0;
+  for (const name of fs.readdirSync(dir)) {
+    const full = path.join(dir, name); let st; try { st = fs.statSync(full); } catch (e) { continue; }
+    try {
+      if (st.isDirectory()) { const p = readPack(packRoot(full)); if (p) cands.push({ ...p, from: full }); }
+      else if (/\.zip$/i.test(name)) {
+        const tmp = path.join(app.getPath('temp'), 'cm-upd-' + Date.now() + '-' + (n++));
+        await unzipTo(full, tmp);
+        const p = readPack(packRoot(tmp)); if (p) cands.push({ ...p, from: full });
+      }
+    } catch (e) { /* not a usable pack: skip */ }
+  }
+  let best = null, older = null;
+  for (const c of cands) {
+    if (vcmp(c.version, RUN_VERSION) > 0) { if (!best || vcmp(c.version, best.version) > 0) best = c; }
+    else older = older && vcmp(older.version, c.version) > 0 ? older : c;
+  }
+  return { best, older, dir, count: cands.length };
+}
+ipcMain.handle('upd-info', () => ({ version: RUN_VERSION, dir: updateDir(), patched: !!global.__patchOk }));
+ipcMain.handle('upd-open-folder', () => { shell.openPath(updateDir()); return true; });
+ipcMain.handle('upd-choose-folder', async () => {
+  const { dialog } = require('electron');
+  const r = await dialog.showOpenDialog(win, { title: 'Choose the folder where you keep update files', properties: ['openDirectory', 'createDirectory'], defaultPath: updateDir() });
+  if (r.canceled || !r.filePaths[0]) return null;
+  prefs.updateDir = r.filePaths[0]; writeJson(prefsFile, prefs); return prefs.updateDir;
+});
+ipcMain.handle('upd-check', async () => {
+  try {
+    const r = await scanUpdates();
+    pendingPack = r.best;
+    if (r.best) return { found: true, version: r.best.version, current: RUN_VERSION, from: path.basename(r.best.from), dir: r.dir };
+    return { found: false, current: RUN_VERSION, dir: r.dir, note: r.count ? 'You already have the newest version (' + RUN_VERSION + ').' : 'No update file found in the folder.' };
+  } catch (e) { return { found: false, current: RUN_VERSION, error: String(e && e.message || e) }; }
+});
+ipcMain.handle('upd-install', () => {
+  try {
+    if (!pendingPack) return { ok: false, error: 'Check for an update first.' };
+    const dest = path.join(app.getPath('userData'), 'app', pendingPack.version);
+    fs.rmSync(dest, { recursive: true, force: true });
+    fs.mkdirSync(dest, { recursive: true });
+    for (const f of PACK_FILES) { const s = path.join(pendingPack.root, f); if (fs.existsSync(s)) fs.copyFileSync(s, path.join(dest, f)); }
+    fs.writeFileSync(path.join(app.getPath('userData'), 'active.json'), JSON.stringify({ version: pendingPack.version, fails: 0 }));
+    // keep only this version's folder
+    const base = path.join(app.getPath('userData'), 'app');
+    for (const n of fs.readdirSync(base)) if (n !== pendingPack.version) fs.rmSync(path.join(base, n), { recursive: true, force: true });
+    saveStateNow();
+    setTimeout(() => { app.relaunch(); app.exit(0); }, 400);
+    return { ok: true };
+  } catch (e) { return { ok: false, error: String(e && e.message || e) }; }
+});

@@ -33,6 +33,11 @@ contextBridge.exposeInMainWorld('api', {
   overlay: (open) => ipcRenderer.send('overlay', !!open),
 
   // services and usage
+  updInfo: () => ipcRenderer.invoke('upd-info'),
+  updOpenFolder: () => ipcRenderer.invoke('upd-open-folder'),
+  updChooseFolder: () => ipcRenderer.invoke('upd-choose-folder'),
+  updCheck: () => ipcRenderer.invoke('upd-check'),
+  updInstall: () => ipcRenderer.invoke('upd-install'),
   refreshUsage: (id) => ipcRenderer.send('refresh-usage', id),
   saveService: (d) => ipcRenderer.send('save-service', d),
   deleteService: (id) => ipcRenderer.send('delete-service', id)

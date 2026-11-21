@@ -179,6 +179,8 @@
   .pitem.sel,.pitem:hover { background:var(--bg); }
   .pitem img { width:22px; height:22px; border-radius:5px; }
   .pitem .k { margin-left:auto; font-size:12px; color:var(--muted); }
+  #updmodal { align-items:center; justify-content:center; }
+  .keytxt2 { font-family:Consolas,monospace; font-size:12.5px; background:var(--bg); padding:8px 10px; border-radius:8px; word-break:break-all; user-select:text; }
   #modal, #pause, #keymodal, #valmodal { align-items:center; justify-content:center; }
   #pause .mbox, #keymodal .mbox { max-height:92vh; overflow-y:auto; }
   .mbox { width:min(440px,92vw); background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px; box-shadow:0 20px 60px rgba(0,0,0,.35); }
@@ -206,6 +208,7 @@
   <div class="sep"></div>
   <div id="railApps"></div>
   <button class="rbtn" id="addBtn" title="Add an app" aria-label="Add an app"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><span class="rl">Add an app</span></button>
+  <button class="rbtn" id="updBtn" title="Check for an update" aria-label="Check for update"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg></span><span class="rl">Check for update</span></button>
   <button class="rbtn" id="collapseBtn" title="Shrink or expand this bar" aria-label="Shrink or expand"><span class="ic"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></span><span class="rl">Shrink</span></button>
   <button class="rbtn" id="setBtn" title="Look and feel" aria-label="Look and feel"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3.9a7 7 0 0 0-2-1.2L14.2 3h-4l-.4 2.6a7 7 0 0 0-2 1.2l-2.3-.9-2 3.4 2 1.5A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.4 2.3-.9a7 7 0 0 0 2 1.2l.4 2.6h4l.4-2.6a7 7 0 0 0 2-1.2l2.3.9 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z"/></svg></span><span class="rl">Look and feel</span></button>
 </nav>
@@ -239,6 +242,17 @@
     <div class="hint">Tip: right-click any app for more options &middot; Ctrl K to search &middot; Alt+Left for Back</div>
   </div>
 </main>
+
+<div class="veil" id="updmodal"><div class="mbox" style="width:min(520px,94vw)">
+  <h3>Check for update</h3>
+  <div class="umsg" id="uVer"></div>
+  <div class="lbl" style="margin:14px 0 4px">Update folder</div>
+  <div class="keytxt2" id="uDir"></div>
+  <div class="mact" style="margin-top:8px"><button class="btn" id="uOpen">Open folder</button><button class="btn" id="uChoose">Change folder</button></div>
+  <div class="umsg" style="margin-top:10px">Put the update file I give you (a .zip, or its unzipped folder) into this folder, then press Check.</div>
+  <div id="uResult" style="margin-top:12px;font-size:14px;min-height:20px"></div>
+  <div class="mact"><span class="sp"></span><button class="btn" id="uClose">Close</button><button class="btn pri" id="uCheck">Check</button><button class="btn pri" id="uInstall" style="display:none">Install and restart</button></div>
+</div></div>
 
 <div class="veil" id="palette"><div class="pbox"><input id="pin" placeholder="Open an app&hellip;" autocomplete="off" spellcheck="false"><div id="plist"></div></div></div>
 
@@ -508,6 +522,34 @@
   }
   grip.addEventListener('dblclick', toggleRail);
   $('collapseBtn').onclick = toggleRail;
+
+  /* ---------- Check for update (from a folder on this PC) ---------- */
+  async function openUpd() {
+    if (state.active !== null) A.home();
+    A.overlay(true);
+    const i = await A.updInfo();
+    $('uVer').textContent = 'You are running version ' + i.version + (i.patched ? ' (updated from a file)' : '') + '.';
+    $('uDir').textContent = i.dir; $('uResult').textContent = ''; $('uInstall').style.display = 'none'; $('uCheck').style.display = '';
+    $('updmodal').classList.add('show');
+  }
+  function closeUpd() { $('updmodal').classList.remove('show'); if (!$('modal').classList.contains('show') && !$('look').classList.contains('show') && !paletteOpen) A.overlay(false); }
+  $('updBtn').onclick = openUpd;
+  $('uClose').onclick = closeUpd;
+  $('uOpen').onclick = () => A.updOpenFolder();
+  $('uChoose').onclick = async () => { const d = await A.updChooseFolder(); if (d) { $('uDir').textContent = d; $('uResult').textContent = ''; } };
+  $('uCheck').onclick = async () => {
+    $('uResult').textContent = 'Looking...'; $('uCheck').disabled = true;
+    const r = await A.updCheck(); $('uCheck').disabled = false;
+    if (r.error) { $('uResult').textContent = 'Could not check: ' + r.error; return; }
+    if (r.found) { $('uResult').textContent = 'Found version ' + r.version + ' (' + r.from + '). Your logins and settings are kept.'; $('uInstall').style.display = ''; $('uCheck').style.display = 'none'; }
+    else $('uResult').textContent = r.note;
+  };
+  $('uInstall').onclick = async () => {
+    $('uInstall').disabled = true; $('uResult').textContent = 'Installing...';
+    const r = await A.updInstall();
+    if (!r.ok) { $('uResult').textContent = 'Could not install: ' + r.error; $('uInstall').disabled = false; }
+    else $('uResult').textContent = 'Done. Restarting the app...';
+  };
 
   /* ---------- wiring ---------- */
   $('homeBtn').onclick = () => { setPage('home'); A.home(); };

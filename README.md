@@ -1,4 +1,4 @@
-# Multi AI (v2.1.0)
+# Multi AI (v2.3.0)
 
 New in 2.1.0: Universal Search, API keys and Usage history tabs removed. The app is back to apps, left bar, toolbar, split screen and Ctrl K.
 
